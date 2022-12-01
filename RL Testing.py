@@ -1,2 +1,1 @@
-print("Test to GitChanges")
-print("Changes without Push lets see this")
+print("This file is now in a branched called devolpment and well see if its gonna get pushed to the master")
