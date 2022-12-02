@@ -86,7 +86,7 @@ def create_customer():
     """Creates Customer_List with random demands & position from Apriori_List"""
     customer_list.clear()
     for y in apriori_list:
-        customer_x = Customer(random.randrange(1, 11, 1), y)
+        customer_x = Customer(random.randrange(1, 20, 1), y)
         if customer_x.position == 0:
             customer_x.demand = 0
         customer_list.append(customer_x)
@@ -174,12 +174,8 @@ action_refill = [0, 1]
 action_serve = [1, 0]
 action_space_size = [action_refill, action_serve]
 
-state_customer_list = 21
-state_capactiy = capacity
-state_space_size = [state_capactiy, state_customer_list]
-#state_space_size = [Service.capacity, Service.position, step]
-
-q_table = np.zeros((state_customer_list, capacity, len(action_space_size)))
+state_customer_list = len(apriori_list)
+q_table = np.zeros((capacity+1, state_customer_list+1, len(action_space_size)))
 
 num_episodes = 15000
 max_steps_per_episode = 99
@@ -195,7 +191,7 @@ max_exploration_rate = 1.0  # Exploration probability at start
 min_exploration_rate = 0.0001  # Minimum exploration probability
 exploration_decay_rate = 0.002  # Exponential decay rate for exploration prob
 
-list_q_table = [1000, 2000, 3000, 4000, 5000, 6000, 7000, 8000, 9000, 10000, 11000, 12000, 13000, 14000, 15000]
+#list_q_table = [1000, 9000, 15000]
 
 if __name__ == "__main__":
 
@@ -209,11 +205,14 @@ if __name__ == "__main__":
         step = 0
         rewards_current_episodes = 0
         state = 0
+        old_capacity = 0
         for x in apriori_list:
             """Reset step_distance for reward"""
             vehicle.step_distance = 0
             """Continue to next customer"""
             next_customer = apriori_list[step]
+            """Set current Capacity for state/new_state"""
+            old_capacity = vehicle.capacity
             # 3. Choose an action a in the current world state (s)
             # First randomize a number
             exploration_rate_threshold = random.uniform(0, 1)
@@ -235,16 +234,15 @@ if __name__ == "__main__":
                     vehicle.refill(step, next_customer)
             # Take the action and observe the outcome state(s') and reward (r)
             reward = vehicle.step_distance/100
-            if step < len(apriori_list):
-                new_state = step
+            new_state = step + 1
 
 
             # Update Q(s,a):= Q(s,a) + lr [R(s,a) + gamma* max Q(s',a') - Q(s,a)]
             # qtable[new_state,:] : all the actions we can take from new state
-            old_value = q_table[state, action]
-            best_expected_value = np.min(q_table[new_state, :])
+            old_value = q_table[old_capacity, state, action]
+            best_expected_value = np.min(q_table[vehicle.capacity, new_state, :])
             bellman_term = reward + discount_rate * best_expected_value - old_value
-            q_table[state, action] = old_value + learning_rate * bellman_term
+            q_table[old_capacity, state, action] = old_value + learning_rate * bellman_term
 
 
             rewards_current_episodes += reward
@@ -252,10 +250,6 @@ if __name__ == "__main__":
             """Begin next cycle"""
             step = step + 1
             state = new_state
-            """End Cycle if all customers have been served"""
-            #if all ([i.demand == 0 for i in customer_list]):
-             #   break
-            #Carefull if your last customer has always a demand of 0 so you would break before you reach him
         """Add cycle's resulting total distance to list for avg"""
         avg_distance.append(vehicle.distance)
         # Reduce epsilon (for less exploration later on)
@@ -263,9 +257,9 @@ if __name__ == "__main__":
             -exploration_decay_rate * episode)
         rewards_all_episodes.append(rewards_current_episodes)
         """Print Q-Table after 1000 Iterations"""
-        for teiler in list_q_table:
-            if teiler == episode:
-                print("**********Q-Table after ", teiler, "Iterations**************\n", q_table)
+        #for teiler in list_q_table:
+            #if teiler == episode:
+                #print("**********Q-Table after ", teiler, "Iterations**************\n", q_table)
 
     # Calculate and print the average reward and Distance per thousand episodes
     rewards_per_thousand_episodes = np.split(np.array(rewards_all_episodes), num_episodes / 1000)
