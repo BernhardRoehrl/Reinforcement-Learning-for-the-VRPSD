@@ -1,6 +1,8 @@
 import random
 import numpy as np
 
+
+random.seed(9001)
 apriori_list = [0, 3, 4, 1, 2, 11, 12, 13, 14, 15, 16, 5, 6, 7, 8, 9, 10, 0]
 """imported Apriori-route"""
 data = {}
