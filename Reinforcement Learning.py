@@ -80,13 +80,13 @@ data['distance_matrix'] = [
 customer_list = []
 avg_distance = []
 avg_list = []
-capacity = 20  # Vehicle Capacity Parameter
+capacity = 2  # Vehicle Capacity Parameter
 
 def create_customer():
     """Creates Customer_List with random demands & position from Apriori_List"""
     customer_list.clear()
     for y in apriori_list:
-        customer_x = Customer(random.randrange(1, 20, 1), y)
+        customer_x = Customer(random.randrange(1, 2, 1), y)
         if customer_x.position == 0:
             customer_x.demand = 0
         customer_list.append(customer_x)
@@ -170,8 +170,8 @@ class Customer:
 
 """Q-Learning"""
 # Q_Table define actions and states
-action_refill = [0, 1]
-action_serve = [1, 0]
+action_refill = 0
+action_serve = 1
 action_space_size = [action_refill, action_serve]
 
 state_customer_list = len(apriori_list)
@@ -190,8 +190,8 @@ exploration_rate = 1.0  # Exploration rate
 max_exploration_rate = 1.0  # Exploration probability at start
 min_exploration_rate = 0.0001  # Minimum exploration probability
 exploration_decay_rate = 0.002  # Exponential decay rate for exploration prob
-
-#list_q_table = [1000, 9000, 15000]
+exploration_counter = 0
+list_q_table = [300]
 
 if __name__ == "__main__":
 
@@ -217,31 +217,32 @@ if __name__ == "__main__":
             # First randomize a number
             exploration_rate_threshold = random.uniform(0, 1)
             # If this number > greater than epsilon --> exploitation (taking the smallest Q value for this state)
-            if exploration_rate_threshold > exploration_rate:
-                action = np.argmin(q_table[state, :])
+            if exploration_rate_threshold < exploration_rate:
+                action = random.choice(action_space_size)
+                if action == 1:
+                    """Agent chooses action 1: Vehicle must serve"""
+                    vehicle.serve(step, next_customer)
+                    exploration_counter += 1
+                else:
+                    """Agent chooses action 2: refilling"""
+                    vehicle.refill(step, next_customer)
+                    exploration_counter += 1
+            # Else doing a random choice --> exploration
+            else:
+                action = np.argmin(q_table[old_capacity, state, :])
                 if action == 1:
                     vehicle.serve(step, next_customer)
                 elif action == 0:
-                    vehicle.refill(step, next_customer)
-            # Else doing a random choice --> exploration
-            else:
-                action = random.choice(action_space_size)
-                if action == [1, 0]:
-                    """Agent chooses action 1: Vehicle must serve"""
-                    vehicle.serve(step, next_customer)
-                else:
-                    """Agent chooses action 2: refilling"""
                     vehicle.refill(step, next_customer)
             # Take the action and observe the outcome state(s') and reward (r)
             reward = vehicle.step_distance/100
             new_state = step + 1
 
-
             # Update Q(s,a):= Q(s,a) + lr [R(s,a) + gamma* max Q(s',a') - Q(s,a)]
             # qtable[new_state,:] : all the actions we can take from new state
             old_value = q_table[old_capacity, state, action]
             best_expected_value = np.min(q_table[vehicle.capacity, new_state, :])
-            bellman_term = reward + discount_rate * best_expected_value - old_value
+            bellman_term = (reward + discount_rate * best_expected_value - old_value)
             q_table[old_capacity, state, action] = old_value + learning_rate * bellman_term
 
 
@@ -257,9 +258,10 @@ if __name__ == "__main__":
             -exploration_decay_rate * episode)
         rewards_all_episodes.append(rewards_current_episodes)
         """Print Q-Table after 1000 Iterations"""
-        #for teiler in list_q_table:
-            #if teiler == episode:
-                #print("**********Q-Table after ", teiler, "Iterations**************\n", q_table)
+        for teiler in list_q_table:
+            if teiler == episode:
+                print("**********Q-Table after ", teiler, "Iterations**************\n", q_table)
+                print(teiler, "The Simulation explored: ", exploration_counter)
 
     # Calculate and print the average reward and Distance per thousand episodes
     rewards_per_thousand_episodes = np.split(np.array(rewards_all_episodes), num_episodes / 1000)
@@ -281,3 +283,4 @@ if __name__ == "__main__":
     print("LEN OF Avg_distance = ", len(avg_distance))
     # Print updated Q-table
     print("\n**********Q-Table**************\n", q_table)
+    print("The Simulation explored: ", exploration_counter)
