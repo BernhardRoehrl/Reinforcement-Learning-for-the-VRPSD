@@ -80,13 +80,13 @@ data['distance_matrix'] = [
 customer_list = []
 avg_distance = []
 avg_list = []
-capacity = 2  # Vehicle Capacity Parameter
+capacity = 20  # Vehicle Capacity Parameter
 
 def create_customer():
     """Creates Customer_List with random demands & position from Apriori_List"""
     customer_list.clear()
     for y in apriori_list:
-        customer_x = Customer(random.randrange(1, 2, 1), y)
+        customer_x = Customer(random.randrange(1, 11, 1), y)
         if customer_x.position == 0:
             customer_x.demand = 0
         customer_list.append(customer_x)
