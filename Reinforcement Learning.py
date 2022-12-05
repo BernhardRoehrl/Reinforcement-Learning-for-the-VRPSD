@@ -184,14 +184,14 @@ max_steps_per_episode = 99
 # List of rewards
 rewards_all_episodes = []
 
-learning_rate = 0.09  # Learning rate
-discount_rate = 0.95  # Discounting rate
+learning_rate = 0.04  # Learning rate
+discount_rate = 0.75  # Discounting rate
 
 # Exploration parameters
 exploration_rate = 1.0  # Exploration rate
 max_exploration_rate = 1.0  # Exploration probability at start
-min_exploration_rate = 0.0001  # Minimum exploration probability
-exploration_decay_rate = 0.002  # Exponential decay rate for exploration prob
+min_exploration_rate = 0.001  # Minimum exploration probability
+exploration_decay_rate = 0.05  # Exponential decay rate for exploration prob
 exploration_counter = 0
 list_q_table = [300]
 
@@ -262,7 +262,7 @@ if __name__ == "__main__":
         """Print Q-Table after 1000 Iterations"""
         for teiler in list_q_table:
             if teiler == episode:
-                print("**********Q-Table after ", teiler, "Iterations**************\n", q_table)
+                #print("**********Q-Table after ", teiler, "Iterations**************\n", q_table)
                 print(teiler, "The Simulation explored: ", exploration_counter)
 
     # Calculate and print the average reward and Distance per thousand episodes
@@ -284,5 +284,5 @@ if __name__ == "__main__":
     #print("\nAVG_Distance = ", np.average(avg_distance))
     print("LEN OF Avg_distance = ", len(avg_distance))
     # Print updated Q-table
-    print("\n**********Q-Table**************\n", q_table)
+    #print("\n**********Q-Table**************\n", q_table)
     print("The Simulation explored: ", exploration_counter)
