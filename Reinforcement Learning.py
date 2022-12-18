@@ -286,3 +286,4 @@ if __name__ == "__main__":
     # Print updated Q-table
     #print("\n**********Q-Table**************\n", q_table)
     print("The Simulation explored: ", exploration_counter)
+    print(q_table)
