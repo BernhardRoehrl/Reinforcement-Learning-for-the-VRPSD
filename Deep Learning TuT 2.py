@@ -28,7 +28,7 @@ def create_training_data():
             except Exception as e:  # in the interest in keeping the output clean...
                 pass
             except OSError as e:
-               print("OSErrroBad img most likely", e, os.path.join(path, img))
+               print("OSError Bad img most likely", e, os.path.join(path, img))
             except Exception as e:
                print("general exception", e, os.path.join(path, img))
 
@@ -47,7 +47,7 @@ for features,label in training_data:
 print(X[0].reshape(-1, IMG_SIZE, IMG_SIZE, 1))
 
 X = np.array(X).reshape(-1, IMG_SIZE, IMG_SIZE, 1)
-
+y = np.array(y)
 """Saving the model for later"""
 
 pickle_out = open("X.pickle", "wb")
