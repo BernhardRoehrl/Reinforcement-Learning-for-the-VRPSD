@@ -31,6 +31,7 @@ model.add(MaxPooling2D(pool_size=(2, 2)))
 model.add(Flatten())  # this converts our 3D features maps to 1D feature vectors
 
 model.add(Dense(64))
+model.add(Activation('relu'))
 
 model.add(Dense(1))
 model.add(Activation('sigmoid'))
