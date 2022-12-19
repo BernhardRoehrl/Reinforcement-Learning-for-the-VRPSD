@@ -11,7 +11,7 @@ import pickle
 DATADIR = "D:/Code/PetImages"
 
 CATEGORIES = ["Dog", "Cat"]
-IMG_SIZE = 100
+IMG_SIZE = 50
 training_data = []
 
 def create_training_data():

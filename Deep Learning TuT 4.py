@@ -1,6 +1,7 @@
 import pickle
 import numpy as np
 import tensorflow as tf
+from tensorflow.python.keras.callbacks import TensorBoard
 from tensorflow.python.keras import layers
 from keras.datasets import cifar10
 from keras.preprocessing.image import ImageDataGenerator
@@ -8,8 +9,9 @@ from tensorflow.python.keras import Sequential
 from tensorflow.python.keras.layers import Dense, Dropout, Activation, Flatten
 from tensorflow.python.keras.layers import Conv2D, MaxPooling2D
 
-gpu_options = tf.GPUOptions(per_process_gpu_memory_fraction=0.333)
-sess = tf.Session(config=tf.ConfigProto(gpu_options=gpu_options))
+NAME = ""
+gpu_options = tf.compat.v1.GPUOptions(per_process_gpu_memory_fraction=0.333)
+sess = tf.compat.v1.Session(config=tf.compat.v1.ConfigProto(gpu_options=gpu_options))
 
 pickle_in = open("X.pickle", "rb")
 X = pickle.load(pickle_in)
@@ -41,4 +43,4 @@ model.add(Activation('sigmoid'))
 
 model.compile(loss='binary_crossentropy', optimizer='adam', metrics=['accuracy'])
 
-model.fit(X, y, batch_size=32, epochs=10, validation_split=0.1)
+model.fit(X, y, batch_size=32, epochs=3, validation_split=0.3)
