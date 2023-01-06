@@ -14,8 +14,6 @@ X = pickle.load(pickle_in)
 pickle_in = open("y.pickle", "rb")
 y = pickle.load(pickle_in)
 
-
-
 X = X/255.0
 
 model = Sequential()
@@ -38,4 +36,4 @@ model.add(Activation('sigmoid'))
 
 model.compile(loss='binary_crossentropy', optimizer='adam', metrics=['accuracy'])
 
-model.fit(X, y, batch_size=32, epochs=10, validation_split=0.1)
+model.fit(X, y, batch_size=32, epochs=3, validation_split=0.1)
