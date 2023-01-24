@@ -179,7 +179,7 @@ class Service:
         self.step_distance = 0
         self.old_capacity = self.capacity
         exploration_rate_threshold = random.uniform(0, 1)
-        if exploration_rate_threshold < exploration_rate:
+        if exploration_rate_threshold < self.exploration_rate:
             action = random.choice(action_space_size)
             if action == 1:
                 """Agent chooses action 1: Vehicle must serve"""
@@ -278,7 +278,6 @@ list_q_table = [300]
 
 if __name__ == "__main__":
 
-    #print("###########Start: initial Q_table: ##########", q_table)
     vehicle = Service(0, 15, 0, 0)
     for episode in range(num_episodes):
         vehicle.reset_variables(capacity)
@@ -286,7 +285,5 @@ if __name__ == "__main__":
             vehicle.execute_episode()
         vehicle.post_episode_calculation()
     print_final()
-    print(vehicle.exploration_rate)
-    # Calculate and print the average reward and Distance per thousand episodes
 
 
