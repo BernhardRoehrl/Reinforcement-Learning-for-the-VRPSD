@@ -1,0 +1,21 @@
+with open('input_string.txt', 'r') as file:
+    output_string = ''
+    for line in file:
+        values = line.strip().split()
+        if len(values) >= 3:
+            new_line = ",".join(values[:3]) + "\n"
+            output_string += new_line
+
+with open('Final Code/cutted_string.txt', 'w') as file:
+    file.write(output_string)
+
+desired_list = []
+with open('Final Code/cutted_string.txt', 'r') as file:
+    for line in file:
+        values = line.strip().split(",")
+        if len(values) >= 3:
+            position = int(values[0])
+            values = values[1:3]
+            desired_list.append((int(values[0]), int(values[1])))
+
+print(desired_list)
