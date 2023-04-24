@@ -1,7 +1,6 @@
 import random
 import numpy as np
 
-
 random.seed(9001)
 apriori_list = [0, 3, 4, 1, 2, 11, 12, 13, 14, 15, 16, 5, 6, 7, 8, 9, 10, 0]
 """imported Apriori-route"""
@@ -84,6 +83,7 @@ avg_distance = []
 avg_list = []
 capacity = 20  # Vehicle Capacity Parameter
 
+
 def create_customer():
     """Creates Customer_List with random demands & position from Apriori_List"""
     customer_list.clear()
@@ -97,13 +97,30 @@ def create_customer():
 
 class Service:
     """For the vehicle and tracking distance"""
-
     def __init__(self, position, capacity, distance, step_distance):
+        self.exploration_rate = exploration_rate  #  AUFPASSEN HIER WEGEN EXPLORATION RATE RESET
         self.capacity = capacity
+        self.step = 0
+        self.state = 0
+        self.old_capacity = 0
+        self.rewards_current_episodes = 0
         self.position = position
         self.distance = distance
         self.step_distance = step_distance
+        self.exploration_counter = 0
 
+    def reset_variables(self, capacity):
+        """Resetting for outer loop"""
+        create_customer()
+        self.position = 0
+        self.capacity = capacity
+        self.distance = 0
+        self.step_distance = 0
+        self.step = 0
+        self.state = 0
+        self.old_capacity = 0
+        self.rewards_current_episodes = 0
+        return self, customer_list
 
     def position_update(self, next_customer):
         """Update vehicle position"""
@@ -158,9 +175,52 @@ class Service:
             self.position_update(customer)
             return customer_list[current_step].demand, self.capacity, self.position, self.distance, self.step_distance
 
+    def execute_episode(self):
+        self.step_distance = 0
+        self.old_capacity = self.capacity
+        exploration_rate_threshold = random.uniform(0, 1)
+        if exploration_rate_threshold < self.exploration_rate:
+            action = random.choice(action_space_size)
+            if action == 1:
+                """Agent chooses action 1: Vehicle must serve"""
+                self.serve(self.step, apriori_list[self.step])
+                self.exploration_counter += 1
+            else:
+                """Agent chooses action 2: refilling"""
+                self.refill(self.step, apriori_list[self.step])
+                self.exploration_counter += 1
+        else:
+            action = np.argmin(q_table[self.old_capacity, self.state, :])
+            if action == 1:
+                self.serve(self.step, apriori_list[self.step])
+            elif action == 0:
+                self.refill(self.step, apriori_list[self.step])
+        reward = self.step_distance / 100
+        new_state = self.step + 1
+        old_value = q_table[self.old_capacity, self.state, action]
+        best_expected_value = np.min(q_table[self.capacity, new_state, :])
+        bellman_term = (reward + discount_rate * best_expected_value - old_value)
+        q_table[self.old_capacity, self.state, action] = old_value + learning_rate * bellman_term
+        self.rewards_current_episodes += reward
+        self.step = self.step + 1
+        self.state = new_state
+        return self, new_state, q_table,
+
+    def post_episode_calculation(self):
+        avg_distance.append(self.distance)
+        self.exploration_rate = min_exploration_rate + (max_exploration_rate - min_exploration_rate) * np.exp(
+            -exploration_decay_rate * episode)
+        rewards_all_episodes.append(self.rewards_current_episodes)
+        for divider in list_q_table:
+            if divider == episode:
+                print(divider, "The Simulation explored: ", self.exploration_counter)
+        return avg_distance, self, rewards_all_episodes,
+
+
+
+
 class Customer:
     """Customers with demand and position"""
-
     def __init__(self, demand, position):
         self.demand = demand
         self.position = position
@@ -169,6 +229,27 @@ class Customer:
         """Change Customer Demand"""
         self.demand = demand
 
+def print_final():
+    rewards_per_thousand_episodes = np.split(np.array(rewards_all_episodes), num_episodes / 1000)
+    avg_distances_per_thousand_episodes = np.split(np.array(avg_distance), num_episodes / 1000)
+    count = 1000
+    print("\n*********Average reward per thousand episodes******\n")
+    for r in rewards_per_thousand_episodes:
+        print(count, ":", str(sum(r / 1000)))
+        count += 1000
+    count = 1000
+    print("\n********Average Distance per thousand episodes******\n")
+    for d in avg_distances_per_thousand_episodes:
+        print(count, ":", str(sum(d / 1000)))
+        count += 1000
+    """End simulation and show results"""
+    # print("\nSimulation is done!!!\n", avg_distance,"\n\n", avg_list)
+    # print("\nAVG_Distance = ", np.average(avg_distance))
+    print("LEN OF Avg_distance = ", len(avg_distance))
+    # Print updated Q-table
+    # print("\n**********Q-Table**************\n", q_table)
+    print("The Simulation explored: ", vehicle.exploration_counter)
+    print(q_table)
 
 """Q-Learning"""
 # Q_Table define actions and states
@@ -177,7 +258,7 @@ action_serve = 1
 action_space_size = [action_refill, action_serve]
 
 state_customer_list = len(apriori_list)
-q_table = np.zeros((capacity+1, state_customer_list+1, len(action_space_size)))
+q_table = np.zeros((capacity + 1, state_customer_list + 1, len(action_space_size)))
 
 num_episodes = 15000
 max_steps_per_episode = 99
@@ -197,93 +278,12 @@ list_q_table = [300]
 
 if __name__ == "__main__":
 
-    print("###########Start: initial Q_table: ##########", q_table)
-
+    vehicle = Service(0, 15, 0, 0)
     for episode in range(num_episodes):
-        """Performing simulation multiple times and resetting for next cycle"""
-        create_customer()
-        vehicle = Service(0, capacity, 0, 0)  # care for defs refilling capacity
-        next_customer = 0
-        step = 0
-        rewards_current_episodes = 0
-        state = 0
-        old_capacity = 0
+        vehicle.reset_variables(capacity)
         for x in apriori_list:
-            """Reset step_distance for reward"""
-            vehicle.step_distance = 0
-            """Continue to next customer"""
-            next_customer = apriori_list[step]
-            """Set current Capacity for state/new_state"""
-            old_capacity = vehicle.capacity
-            # 3. Choose an action a in the current world state (s)
-            # First randomize a number
-            exploration_rate_threshold = random.uniform(0, 1)
-            # If this number > greater than epsilon --> exploitation (taking the smallest Q value for this state)
-            if exploration_rate_threshold < exploration_rate:
-                action = random.choice(action_space_size)
-                if action == 1:
-                    """Agent chooses action 1: Vehicle must serve"""
-                    vehicle.serve(step, next_customer)
-                    exploration_counter += 1
-                else:
-                    """Agent chooses action 2: refilling"""
-                    vehicle.refill(step, next_customer)
-                    exploration_counter += 1
-            # Else doing a random choice --> exploration
-            else:
-                action = np.argmin(q_table[old_capacity, state, :])
-                if action == 1:
-                    vehicle.serve(step, next_customer)
-                elif action == 0:
-                    vehicle.refill(step, next_customer)
-            # Take the action and observe the outcome state(s') and reward (r)
-            reward = vehicle.step_distance/100
-            new_state = step + 1
-
-            # Update Q(s,a):= Q(s,a) + lr [R(s,a) + gamma* max Q(s',a') - Q(s,a)]
-            # qtable[new_state,:] : all the actions we can take from new state
-            old_value = q_table[old_capacity, state, action]
-            best_expected_value = np.min(q_table[vehicle.capacity, new_state, :])
-            bellman_term = (reward + discount_rate * best_expected_value - old_value)
-            q_table[old_capacity, state, action] = old_value + learning_rate * bellman_term
+            vehicle.execute_episode()
+        vehicle.post_episode_calculation()
+    print_final()
 
 
-            rewards_current_episodes += reward
-
-            """Begin next cycle"""
-            step = step + 1
-            state = new_state
-        """Add cycle's resulting total distance to list for avg"""
-        avg_distance.append(vehicle.distance)
-        # Reduce epsilon (for less exploration later on)
-        exploration_rate = min_exploration_rate + (max_exploration_rate - min_exploration_rate) * np.exp(
-            -exploration_decay_rate * episode)
-        rewards_all_episodes.append(rewards_current_episodes)
-        """Print Q-Table after 1000 Iterations"""
-        for teiler in list_q_table:
-            if teiler == episode:
-                #print("**********Q-Table after ", teiler, "Iterations**************\n", q_table)
-                print(teiler, "The Simulation explored: ", exploration_counter)
-
-    # Calculate and print the average reward and Distance per thousand episodes
-    rewards_per_thousand_episodes = np.split(np.array(rewards_all_episodes), num_episodes / 1000)
-    avg_distances_per_thousand_episodes = np.split(np.array(avg_distance), num_episodes / 1000)
-    count = 1000
-    print("\n*********Average reward per thousand episodes******\n")
-    for r in rewards_per_thousand_episodes:
-        print(count, ":", str(sum(r / 1000)))
-        count += 1000
-    count = 1000
-    print("\n********Average Distance per thousand episodes******\n")
-    for d in avg_distances_per_thousand_episodes:
-        print(count, ":", str(sum(d / 1000)))
-        count += 1000
-
-    """End simulation and show results"""
-    #print("\nSimulation is done!!!\n", avg_distance,"\n\n", avg_list)
-    #print("\nAVG_Distance = ", np.average(avg_distance))
-    print("LEN OF Avg_distance = ", len(avg_distance))
-    # Print updated Q-table
-    #print("\n**********Q-Table**************\n", q_table)
-    print("The Simulation explored: ", exploration_counter)
-    print(q_table)

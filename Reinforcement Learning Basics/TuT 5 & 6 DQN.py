@@ -114,8 +114,8 @@ class BlobEnv:
     ENEMY_N = 3  # enemy key in dict
     # the dict! (colors)
     d = {1: (255, 175, 0),
-         2: (0, 255, 0),
-         3: (0, 0, 255)}
+    2: (0, 255, 0),
+    3: (0, 0, 255)}
 
     def reset(self):
         self.player = Blob(self.SIZE)
@@ -393,3 +393,7 @@ for episode in tqdm(range(1, EPISODES + 1), ascii=True, unit='episodes'):
     if epsilon > MIN_EPSILON:
         epsilon *= EPSILON_DECAY
         epsilon = max(MIN_EPSILON, epsilon)
+
+"""
+Working Tensorboard command for cmd within the correct folder = python -m tensorboard.main --logdir=logs/
+"""
