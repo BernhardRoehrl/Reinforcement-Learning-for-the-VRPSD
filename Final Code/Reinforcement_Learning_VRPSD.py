@@ -38,9 +38,10 @@ list_q_table = [300]
 q_table = np.zeros((capacity + 1, len(apriori_list) + 1, len(action_space_size)))  # init the q_table
 
 # Variables for saving process
+depot_prefix = "0M_"   # 0M = Depot in der Mitter, 0E = Depot am Rand
 solution_prefix = "RL_"
 customer_spread = "C"  # C = Clustered or R = Random Spread Customers
-dataset_name = solution_prefix + customer_spread + str(len(apriori_list) - 2) + "_C" + str(capacity) + "_D" + str(
+dataset_name = solution_prefix + depot_prefix + customer_spread + str(len(apriori_list) - 2) + "_C" + str(capacity) + "_D" + str(
     demand_bottom) + "&" + str(demand_top)
 file_name1 = dataset_name + '_output.txt'
 file_name2 = dataset_name + '_q_table.txt'
@@ -218,7 +219,7 @@ class Customer:
         self.demand = demand
 
 
-def print_final(file_path1, file_name1):
+def print_final(file_path1, file_name1, data):
     rewards_per_thousand_episodes = np.split(np.array(rewards_all_episodes), num_episodes / 1000)
     avg_distances_per_thousand_episodes = np.split(np.array(avg_distance), num_episodes / 1000)
     count = 1000
@@ -238,18 +239,10 @@ def print_final(file_path1, file_name1):
             outfile.write(str(count) + ":" + str(sum(d / 1000)) + "\n")
             count += 1000
         """End simulation and show results"""
-        print("LEN OF Avg_distance = ", len(avg_distance))
-        outfile.write("LEN OF Avg_distance = " + str(len(avg_distance)) + "\n")
         print("The Simulation explored: ", vehicle.exploration_counter)
         outfile.write("The Simulation explored: " + str(vehicle.exploration_counter) + "\n")
         print(q_table)
-
-
-def save_q_table(data, file_name2, file_path1):
-    """Function to save the q_table in human-readable file"""
-    file_path = os.path.join(file_path1, file_name2)
-    with open(file_path, 'w') as outfile:  # Write Array to Disc
-        outfile.write('# Array shape: Capacity, Customer, Action {0}\n'.format(data.shape))  # Header
+        outfile.write('\nThe Q_Table: \n#Array shape: Capacity, Customer, Action {0}\n'.format(data.shape))  # Header
         for i, data_slice in enumerate(data):
             np.savetxt(outfile, data_slice, fmt='%-7.2f')
             outfile.write('# Capacity: {0}\n'.format(i + 1))
@@ -263,5 +256,4 @@ if __name__ == "__main__":
         for x in apriori_list:
             vehicle.execute_episode()
         vehicle.post_episode_calculation()
-    print_final(file_path1, file_name1)
-    save_q_table(q_table, file_name2, file_path1)
+    print_final(file_path1, file_name1, q_table)
