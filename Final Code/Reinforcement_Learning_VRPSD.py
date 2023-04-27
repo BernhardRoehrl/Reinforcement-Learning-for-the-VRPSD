@@ -13,6 +13,7 @@ data['distance_matrix'] = distance_matrix
 """Create Lists and Parameters"""
 customer_list = []
 avg_distance = []
+test_list = []
 capacity = 50  # Vehicle Capacity Parameter
 demand_bottom = 10  # Smallest Value Demand can take
 demand_top = 50  # Highest Value Demand can take
@@ -184,6 +185,8 @@ class Service:
         self.rewards_current_episodes += reward
         self.step = self.step + 1
         self.state = new_state
+        if episode == 15999:
+            test_list.append(self.position, self.refill_counter, self.failure_counter)
         return self, new_state, q_table
 
     def post_episode_calculation(self):
@@ -199,12 +202,10 @@ class Service:
         return avg_distance, self, rewards_all_episodes,
 
     def write_final_episode(self, action):
-        last_episode = (
-            "The last episode does: Customer: ", x, "with action: ", action, "and refillcounter = ",
-            self.refill_counter,
-            "and failurecounter = ", self.failure_counter)
-        print(last_episode)
-        data[last_episode] = last_episode
+        file_path = os.path.join(file_path1, file_name1)
+        with open(file_path, 'a') as outfile:
+            outfile.write("The last episode does: Customer: " + str(x) + " with action: " + str(action) + " and refillcounter = " +
+                str(self.refill_counter) + "and failurecounter = " +  str(self.failure_counter) + "\n")
 
 
 class Customer:
@@ -224,7 +225,7 @@ def print_final(file_path1, file_name1, data):
     avg_distances_per_thousand_episodes = np.split(np.array(avg_distance), num_episodes / 1000)
     count = 1000
     file_path = os.path.join(file_path1, file_name1)
-    with open(file_path, 'w') as outfile:
+    with open(file_path, 'a') as outfile:
         print("\n*********Average reward per thousand episodes******\n")
         outfile.write("\n*********Average reward per thousand episodes******\n")
         for r in rewards_per_thousand_episodes:
@@ -242,6 +243,8 @@ def print_final(file_path1, file_name1, data):
         print("The Simulation explored: ", vehicle.exploration_counter)
         outfile.write("The Simulation explored: " + str(vehicle.exploration_counter) + "\n")
         print(q_table)
+        for i in test_list:
+            outfile.write("\nThe Last Episode did at Customer/Refill/Failures" + (str(test_list[i])))
         outfile.write('\nThe Q_Table: \n#Array shape: Capacity, Customer, Action {0}\n'.format(data.shape))  # Header
         for i, data_slice in enumerate(data):
             np.savetxt(outfile, data_slice, fmt='%-7.2f')
