@@ -45,7 +45,7 @@ q_table = np.zeros((capacity + 1, len(apriori_list) + 1, len(action_space_size))
 
 # Variables for saving process
 index = 1
-depot_prefix = "0M_"  # 0M = Depot in der Mitter, 0E = Depot am Rand
+depot_prefix = "0M_"  # 0M = Depot in der Mitte, 0E = Depot am Rand
 solution_prefix = "RL_"
 customer_spread = "C"  # C = Clustered or R = Random Spread Customers
 dataset_name = solution_prefix + depot_prefix + customer_spread + str(len(apriori_list) - 2) + "_C" + str(
@@ -58,13 +58,16 @@ if not os.path.exists(file_path1):
     os.makedirs(file_path1)
 workbook = xlsxwriter.Workbook('test1.xlsx')
 worksheet = workbook.add_worksheet(dataset_name)
-worksheet.write(0, 0, 'Customer')
-worksheet.write(0, 1, 'Action')
-worksheet.write(0, 2, 'Refill_Counter')
-worksheet.write(0, 3, 'Failure_Counter')
-worksheet.write(0, 6, 'Per Thousand Episodes')
-worksheet.write(0, 7, 'Average Distance')
-worksheet.write(0, 10, 'Time for Computation in (s)')
+worksheet.write(2, 0, 'Customer')
+worksheet.write(2, 1, 'Action')
+worksheet.write(2, 2, 'Refill_Counter')
+worksheet.write(2, 3, 'Failure_Counter')
+worksheet.write(2, 6, 'Per Thousand Episodes')
+worksheet.write(2, 7, 'Average Distance')
+worksheet.write(2, 10, 'Time for Computation in (s)')
+worksheet.write(0, 0, 'METHOD = ' + solution_prefix + ' DEPOT 0M: Mitte, 0E: Edge = ' + depot_prefix + ' CUSTOMER_SPREAD = '
+                + customer_spread + str(len(apriori_list) - 2) + " CAPACITY = " + str(capacity) + " DEMANDS BETWEEN = "
+                + str(demand_bottom) + "-" + str(demand_top))
 workbook_results = xlsxwriter.Workbook('results')
 worksheet_results = workbook_results.add_worksheet(solution_prefix)
 
@@ -222,10 +225,10 @@ class Service:
     def write_final_episode(self, action):
         """Function that writes the best routing found after training to text and excel"""
         file_path = os.path.join(file_path1, file_name1)
-        worksheet.write(self.step, 0, x)
-        worksheet.write(self.step, 1, action)
-        worksheet.write(self.step, 2, self.refill_counter)
-        worksheet.write(self.step, 3, self.failure_counter)
+        worksheet.write(self.step+2, 1, x)
+        worksheet.write(self.step+2, 2, action)
+        worksheet.write(self.step+2, 3, self.refill_counter)
+        worksheet.write(self.step+2, 4, self.failure_counter)
         with open(file_path, 'a') as outfile:
             outfile.write("Customer: " + str(x) + " Action: " + str(action) + " Refill_Counter: " +
                           str(self.refill_counter) + " Failure_counter: " + str(self.failure_counter) + "\n")
@@ -244,8 +247,10 @@ class Customer:
 
 
 def print_final(file_path1, file_name1, data, Counter2):
+    """Function that incorporates all output related information for further useage"""
     avg_distances_per_thousand_episodes = np.split(np.array(avg_distance), num_episodes / 1000)
     count = 1000
+    # Write to log-file
     file_path = os.path.join(file_path1, file_name1)
     with open(file_path, 'a') as outfile:
         print("\nAverage Distance per thousand episodes\n")
@@ -253,11 +258,12 @@ def print_final(file_path1, file_name1, data, Counter2):
         for d in avg_distances_per_thousand_episodes:
             print(count, ":", str(sum(d / 1000)))
             outfile.write(str(count) + ":" + str(sum(d / 1000)) + "\n")
-            worksheet.write(Counter2 + 1, 6, count)
-            worksheet.write(Counter2 + 1, 7, sum(d / 1000))
+            # Write to Excel
+            worksheet.write(Counter2+1 + 1, 6, count)
+            worksheet.write(Counter2+1 + 1, 7, sum(d / 1000))
             count += 1000
             Counter2 += 1
-        """End simulation and show results"""
+        # logfile and output print for q_Table and exploration_counter
         print("The Simulation explored: ", vehicle.exploration_counter)
         outfile.write("Explored: " + str(vehicle.exploration_counter) + "\n")
         print(q_table)
@@ -266,36 +272,19 @@ def print_final(file_path1, file_name1, data, Counter2):
         for i, data_slice in enumerate(data):
             np.savetxt(outfile, data_slice, fmt='%-7.2f', delimiter=":")
             outfile.write('# Capacity: {0}\n'.format(i + 1))
-    elapsed_time = timeit.default_timer() - start_time
-    worksheet.write(1, 10, elapsed_time)
-    """Trying to get q_table into an interpretable output"""
+    elapsed_time = timeit.default_timer() - start_time   # Computational Time
+    worksheet.write(3, 10, elapsed_time)   # Computational Time to Excel
+    # Processing the 3d Numpy Array: q_table for Excel
     names = ['x', 'y', 'z']
-    index = pd.MultiIndex.from_product([range(s)for s in q_table.shape], names=names)
-    df = pd.DataFrame({'q_table': q_table.flatten()}, index=index)['q_table']
+    header_names = pd.MultiIndex.from_product([range(s)for s in q_table.shape], names=names)
+    df = pd.DataFrame({'q_table': q_table.flatten()}, index=header_names)['q_table']
     df = df.unstack(level='z').swaplevel().sort_index()
     df.columns = ['Refill', 'Serve']
     df.index.names = ['Customer', 'Capacity']
-    print(df)
-    df.to_excel('Q-Table_Pandas.xlsx')
+    # Append the df to the existing Excel
+    df.to_excel('test1.xlsx', engine='xlsxwriter', sheet_name=dataset_name, startrow=2, startcol=15)
+    worksheet.write(2, 15, 'Q-Table')   # Header for q_table
     workbook.close()
-    write_to_excel(data)
-
-def write_to_excel(data_q_table):
-    workbook2 = xlsxwriter.Workbook('test2.xlsx')
-    worksheet2 = workbook2.add_worksheet('q_table')
-    row = 1
-    for i in range(data_q_table.shape[0]):
-        # Write the capacity as a header
-        worksheet2.write(row, 0, f"Capacity {i + 1}")
-        # Write the x and y values as rows
-        col = 1
-        for j in range(data_q_table.shape[1]):
-            worksheet2.write(row, col, data_q_table[i, j, 0])
-            worksheet2.write(i+1, col+1, data_q_table[i, j, 1])
-            row += 1
-        row += 1
-    workbook2.close()
-
 
 if __name__ == "__main__":
     vehicle = Service(0, capacity, 0, 0)   # Init the vehicle
