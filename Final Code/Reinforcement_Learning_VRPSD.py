@@ -1,9 +1,14 @@
 import random
 import numpy as np
 import os
+import pandas as pd
+import xlsxwriter
 from Apriori_Revisited import apriori_list, distance_matrix
+import timeit
 
-# random.seed(9001)
+start_time = timeit.default_timer()
+
+random.seed(9001)
 apriori_list = apriori_list
 """imported Apriori-route"""
 data = {}
@@ -39,16 +44,29 @@ list_q_table = [300]
 q_table = np.zeros((capacity + 1, len(apriori_list) + 1, len(action_space_size)))  # init the q_table
 
 # Variables for saving process
-depot_prefix = "0M_"   # 0M = Depot in der Mitter, 0E = Depot am Rand
+index = 1
+depot_prefix = "0M_"  # 0M = Depot in der Mitter, 0E = Depot am Rand
 solution_prefix = "RL_"
 customer_spread = "C"  # C = Clustered or R = Random Spread Customers
-dataset_name = solution_prefix + depot_prefix + customer_spread + str(len(apriori_list) - 2) + "_C" + str(capacity) + "_D" + str(
-    demand_bottom) + "&" + str(demand_top)
+dataset_name = solution_prefix + depot_prefix + customer_spread + str(len(apriori_list) - 2) + "_C" + str(
+    capacity) + "_D" + str(
+    demand_bottom) + "-" + str(demand_top)
 file_name1 = dataset_name + '_output.txt'
 file_name2 = dataset_name + '_q_table.txt'
 file_path1 = "Experiments\\{}".format(dataset_name)
 if not os.path.exists(file_path1):
     os.makedirs(file_path1)
+workbook = xlsxwriter.Workbook('test1.xlsx')
+worksheet = workbook.add_worksheet(dataset_name)
+worksheet.write(0, 0, 'Customer')
+worksheet.write(0, 1, 'Action')
+worksheet.write(0, 2, 'Refill_Counter')
+worksheet.write(0, 3, 'Failure_Counter')
+worksheet.write(0, 6, 'Per Thousand Episodes')
+worksheet.write(0, 7, 'Average Distance')
+worksheet.write(0, 10, 'Time for Computation in (s)')
+workbook_results = xlsxwriter.Workbook('results')
+worksheet_results = workbook_results.add_worksheet(solution_prefix)
 
 """Function & Classes"""
 
@@ -186,7 +204,7 @@ class Service:
         self.step = self.step + 1
         self.state = new_state
         if episode == 15999:
-            test_list.append(self.position, self.refill_counter, self.failure_counter)
+            self.write_final_episode(action)
         return self, new_state, q_table
 
     def post_episode_calculation(self):
@@ -202,10 +220,15 @@ class Service:
         return avg_distance, self, rewards_all_episodes,
 
     def write_final_episode(self, action):
+        """Function that writes the best routing found after training to text and excel"""
         file_path = os.path.join(file_path1, file_name1)
+        worksheet.write(self.step, 0, x)
+        worksheet.write(self.step, 1, action)
+        worksheet.write(self.step, 2, self.refill_counter)
+        worksheet.write(self.step, 3, self.failure_counter)
         with open(file_path, 'a') as outfile:
-            outfile.write("The last episode does: Customer: " + str(x) + " with action: " + str(action) + " and refillcounter = " +
-                str(self.refill_counter) + "and failurecounter = " +  str(self.failure_counter) + "\n")
+            outfile.write("Customer: " + str(x) + " Action: " + str(action) + " Refill_Counter: " +
+                          str(self.refill_counter) + " Failure_counter: " + str(self.failure_counter) + "\n")
 
 
 class Customer:
@@ -220,43 +243,66 @@ class Customer:
         self.demand = demand
 
 
-def print_final(file_path1, file_name1, data):
-    rewards_per_thousand_episodes = np.split(np.array(rewards_all_episodes), num_episodes / 1000)
+def print_final(file_path1, file_name1, data, Counter2):
     avg_distances_per_thousand_episodes = np.split(np.array(avg_distance), num_episodes / 1000)
     count = 1000
     file_path = os.path.join(file_path1, file_name1)
     with open(file_path, 'a') as outfile:
-        print("\n*********Average reward per thousand episodes******\n")
-        outfile.write("\n*********Average reward per thousand episodes******\n")
-        for r in rewards_per_thousand_episodes:
-            print(count, ":", str(sum(r / 1000)))
-            outfile.write(str(count) + ":" + str(sum(r / 1000)) + "\n")
-            count += 1000
-        count = 1000
-        print("\n********Average Distance per thousand episodes******\n")
-        outfile.write("\n********Average Distance per thousand episodes******\n")
+        print("\nAverage Distance per thousand episodes\n")
+        outfile.write("\nAverage Distance per thousand episodes\n")
         for d in avg_distances_per_thousand_episodes:
             print(count, ":", str(sum(d / 1000)))
             outfile.write(str(count) + ":" + str(sum(d / 1000)) + "\n")
+            worksheet.write(Counter2 + 1, 6, count)
+            worksheet.write(Counter2 + 1, 7, sum(d / 1000))
             count += 1000
+            Counter2 += 1
         """End simulation and show results"""
         print("The Simulation explored: ", vehicle.exploration_counter)
-        outfile.write("The Simulation explored: " + str(vehicle.exploration_counter) + "\n")
+        outfile.write("Explored: " + str(vehicle.exploration_counter) + "\n")
         print(q_table)
-        for i in test_list:
-            outfile.write("\nThe Last Episode did at Customer/Refill/Failures" + (str(test_list[i])))
-        outfile.write('\nThe Q_Table: \n#Array shape: Capacity, Customer, Action {0}\n'.format(data.shape))  # Header
+        outfile.write('\nThe Q_Table {0}\n'.format(data.shape))  # Header 1
+        outfile.write('\nAction 0 : Action 1\n')  # Header 2
         for i, data_slice in enumerate(data):
-            np.savetxt(outfile, data_slice, fmt='%-7.2f')
+            np.savetxt(outfile, data_slice, fmt='%-7.2f', delimiter=":")
             outfile.write('# Capacity: {0}\n'.format(i + 1))
+    elapsed_time = timeit.default_timer() - start_time
+    worksheet.write(1, 10, elapsed_time)
+    """Trying to get q_table into an interpretable output"""
+    names = ['x', 'y', 'z']
+    index = pd.MultiIndex.from_product([range(s)for s in q_table.shape], names=names)
+    df = pd.DataFrame({'q_table': q_table.flatten()}, index=index)['q_table']
+    df = df.unstack(level='z').swaplevel().sort_index()
+    df.columns = ['Refill', 'Serve']
+    df.index.names = ['Customer', 'Capacity']
+    print(df)
+    df.to_excel('Q-Table_Pandas.xlsx')
+    workbook.close()
+    write_to_excel(data)
+
+def write_to_excel(data_q_table):
+    workbook2 = xlsxwriter.Workbook('test2.xlsx')
+    worksheet2 = workbook2.add_worksheet('q_table')
+    row = 1
+    for i in range(data_q_table.shape[0]):
+        # Write the capacity as a header
+        worksheet2.write(row, 0, f"Capacity {i + 1}")
+        # Write the x and y values as rows
+        col = 1
+        for j in range(data_q_table.shape[1]):
+            worksheet2.write(row, col, data_q_table[i, j, 0])
+            worksheet2.write(i+1, col+1, data_q_table[i, j, 1])
+            row += 1
+        row += 1
+    workbook2.close()
 
 
 if __name__ == "__main__":
+    vehicle = Service(0, capacity, 0, 0)   # Init the vehicle
+    for episode in range(num_episodes):   # Outer Loop for 16000 Episodes
+        vehicle.reset_variables(capacity)   # Resetting the variables that got changed in inner loop
+        for x in apriori_list:   # Inner Loop to let the vehicle go through all customers
+            vehicle.execute_episode()   # Main function executing the service
+        vehicle.post_episode_calculation()   # Capture and prepare calculations after every episode
+    print_final(file_path1, file_name1, q_table, index)   # Save results for later use
 
-    vehicle = Service(0, capacity, 0, 0)
-    for episode in range(num_episodes):
-        vehicle.reset_variables(capacity)
-        for x in apriori_list:
-            vehicle.execute_episode()
-        vehicle.post_episode_calculation()
-    print_final(file_path1, file_name1, q_table)
