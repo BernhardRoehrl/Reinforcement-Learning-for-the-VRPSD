@@ -2,13 +2,13 @@ import random
 import numpy as np
 import os
 import pandas as pd
-import xlsxwriter
 from Apriori_Revisited import apriori_list, distance_matrix
 import timeit
+import openpyxl
 
 start_time = timeit.default_timer()
 
-random.seed(9001)
+#random.seed(9001)
 apriori_list = apriori_list
 """imported Apriori-route"""
 data = {}
@@ -43,7 +43,7 @@ exploration_counter = 0
 list_q_table = [300]
 q_table = np.zeros((capacity + 1, len(apriori_list) + 1, len(action_space_size)))  # init the q_table
 
-# Variables for saving process
+# Set up Saving Process
 index = 1
 depot_prefix = "0M_"  # 0M = Depot in der Mitte, 0E = Depot am Rand
 solution_prefix = "RL_"
@@ -51,25 +51,34 @@ customer_spread = "C"  # C = Clustered or R = Random Spread Customers
 dataset_name = solution_prefix + depot_prefix + customer_spread + str(len(apriori_list) - 2) + "_C" + str(
     capacity) + "_D" + str(
     demand_bottom) + "-" + str(demand_top)
+workbook_name = f"{solution_prefix}Results.xlsx"
 file_name1 = dataset_name + '_output.txt'
 file_name2 = dataset_name + '_q_table.txt'
 file_path1 = "Experiments\\{}".format(dataset_name)
 if not os.path.exists(file_path1):
     os.makedirs(file_path1)
-workbook = xlsxwriter.Workbook('test1.xlsx')
-worksheet = workbook.add_worksheet(dataset_name)
-worksheet.write(2, 0, 'Customer')
-worksheet.write(2, 1, 'Action')
-worksheet.write(2, 2, 'Refill_Counter')
-worksheet.write(2, 3, 'Failure_Counter')
-worksheet.write(2, 6, 'Per Thousand Episodes')
-worksheet.write(2, 7, 'Average Distance')
-worksheet.write(2, 10, 'Time for Computation in (s)')
-worksheet.write(0, 0, 'METHOD = ' + solution_prefix + ' DEPOT 0M: Mitte, 0E: Edge = ' + depot_prefix + ' CUSTOMER_SPREAD = '
+try:
+    workbook = openpyxl.load_workbook(workbook_name)
+except FileNotFoundError:
+    workbook = openpyxl.Workbook()
+    workbook.save(workbook_name)
+if dataset_name in workbook.sheetnames:
+    worksheet = workbook[dataset_name]
+else:
+    worksheet = workbook.create_sheet(dataset_name)
+
+worksheet.cell(row = 3, column=1, value = 'Customer')
+worksheet.cell(row = 3, column=2, value = 'Action')
+worksheet.cell(row = 3, column=3, value = 'Refill_Counter')
+worksheet.cell(row = 3, column=4, value = 'Failure_Counter')
+worksheet.cell(row = 3, column=7, value = 'Per Thousand Episodes')
+worksheet.cell(row = 3, column=8, value = 'Average Distance')
+worksheet.cell(row = 3, column=11,value =  'Time for Computation in (s)')
+worksheet.cell(row = 1, column=1, value = 'METHOD = ' + solution_prefix + ' DEPOT 0M: Mitte, 0E: Edge = ' + depot_prefix + ' CUSTOMER_SPREAD = '
                 + customer_spread + str(len(apriori_list) - 2) + " CAPACITY = " + str(capacity) + " DEMANDS BETWEEN = "
                 + str(demand_bottom) + "-" + str(demand_top))
-workbook_results = xlsxwriter.Workbook('results')
-worksheet_results = workbook_results.add_worksheet(solution_prefix)
+#workbook_results = xlsxwriter.Workbook('results')
+#worksheet_results = workbook_results.add_worksheet(solution_prefix)
 
 """Function & Classes"""
 
@@ -225,10 +234,11 @@ class Service:
     def write_final_episode(self, action):
         """Function that writes the best routing found after training to text and excel"""
         file_path = os.path.join(file_path1, file_name1)
-        worksheet.write(self.step+2, 1, x)
-        worksheet.write(self.step+2, 2, action)
-        worksheet.write(self.step+2, 3, self.refill_counter)
-        worksheet.write(self.step+2, 4, self.failure_counter)
+        worksheet.cell(row = self.step+3, column = 1, value = x)
+        worksheet.cell(row = self.step+3, column = 2, value = action)
+        worksheet.cell(row = self.step+3, column = 3, value = self.refill_counter)
+        worksheet.cell(row = self.step+3, column = 4, value = self.failure_counter)
+        worksheet.cell(row = self.step+3, column = 5, value = self.old_capacity)
         with open(file_path, 'a') as outfile:
             outfile.write("Customer: " + str(x) + " Action: " + str(action) + " Refill_Counter: " +
                           str(self.refill_counter) + " Failure_counter: " + str(self.failure_counter) + "\n")
@@ -259,8 +269,8 @@ def print_final(file_path1, file_name1, data, Counter2):
             print(count, ":", str(sum(d / 1000)))
             outfile.write(str(count) + ":" + str(sum(d / 1000)) + "\n")
             # Write to Excel
-            worksheet.write(Counter2+1 + 1, 6, count)
-            worksheet.write(Counter2+1 + 1, 7, sum(d / 1000))
+            worksheet.cell(row= Counter2+1 + 2, column = 7, value = count)
+            worksheet.cell(row= Counter2+1 + 2, column = 8, value = sum(d / 1000))
             count += 1000
             Counter2 += 1
         # logfile and output print for q_Table and exploration_counter
@@ -273,7 +283,7 @@ def print_final(file_path1, file_name1, data, Counter2):
             np.savetxt(outfile, data_slice, fmt='%-7.2f', delimiter=":")
             outfile.write('# Capacity: {0}\n'.format(i + 1))
     elapsed_time = timeit.default_timer() - start_time   # Computational Time
-    worksheet.write(3, 10, elapsed_time)   # Computational Time to Excel
+    worksheet.cell(row = 4, column = 11, value = elapsed_time)   # Computational Time to Excel
     # Processing the 3d Numpy Array: q_table for Excel
     names = ['x', 'y', 'z']
     header_names = pd.MultiIndex.from_product([range(s)for s in q_table.shape], names=names)
@@ -281,10 +291,11 @@ def print_final(file_path1, file_name1, data, Counter2):
     df = df.unstack(level='z').swaplevel().sort_index()
     df.columns = ['Refill', 'Serve']
     df.index.names = ['Customer', 'Capacity']
-    # Append the df to the existing Excel
-    df.to_excel('test1.xlsx', engine='xlsxwriter', sheet_name=dataset_name, startrow=2, startcol=15)
-    worksheet.write(2, 15, 'Q-Table')   # Header for q_table
-    workbook.close()
+    worksheet.cell(row = 5, column = 16, value = 'Q-Table')  # Header for q_table
+    workbook.save(workbook_name)
+    writer = pd.ExcelWriter(workbook_name, engine='openpyxl', mode='a', if_sheet_exists='overlay')
+    with writer as writer:
+        df.to_excel(writer, sheet_name=dataset_name, startrow=5, startcol=15)
 
 if __name__ == "__main__":
     vehicle = Service(0, capacity, 0, 0)   # Init the vehicle
