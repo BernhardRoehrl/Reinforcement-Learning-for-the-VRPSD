@@ -1,5 +1,12 @@
 import numpy as np
 
+"""Profile"""
+customer_spread = 'R'
+depot_position = '0M_'
+capacity = 100
+demand_bottom = 10
+demand_top = 70
+
 # Load data from file
 data = np.loadtxt("cutted_string.txt", delimiter=",")
 def euclidean_distance(x1, y1, x2, y2):

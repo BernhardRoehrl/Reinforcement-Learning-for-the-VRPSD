@@ -8,7 +8,7 @@ import openpyxl
 
 start_time = timeit.default_timer()
 
-#random.seed(9001)
+random.seed(9001)
 apriori_list = apriori_list
 """imported Apriori-route"""
 data = {}

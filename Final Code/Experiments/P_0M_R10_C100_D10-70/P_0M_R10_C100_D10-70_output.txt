@@ -1,0 +1,15 @@
+Customer: 0 Action: 1 Refill_Counter: 0 Failure_counter: 0
+Customer: 6 Action: 1 Refill_Counter: 0 Failure_counter: 0
+Customer: 5 Action: 1 Refill_Counter: 0 Failure_counter: 1
+Customer: 8 Action: 1 Refill_Counter: 0 Failure_counter: 1
+Customer: 7 Action: 1 Refill_Counter: 0 Failure_counter: 2
+Customer: 10 Action: 1 Refill_Counter: 0 Failure_counter: 2
+Customer: 1 Action: 0 Refill_Counter: 1 Failure_counter: 2
+Customer: 9 Action: 1 Refill_Counter: 1 Failure_counter: 2
+Customer: 3 Action: 0 Refill_Counter: 2 Failure_counter: 2
+Customer: 4 Action: 1 Refill_Counter: 2 Failure_counter: 3
+Customer: 2 Action: 1 Refill_Counter: 2 Failure_counter: 3
+Customer: 0 Action: 1 Refill_Counter: 2 Failure_counter: 3
+
+Average Distance per thousand episodes
+1000:307.43200000000076
