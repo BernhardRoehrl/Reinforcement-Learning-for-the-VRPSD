@@ -1,16 +1,7 @@
-"""Simple Vehicles Routing Problem (VRP).
-
-   This is a sample using the routing library python wrapper to solve a VRP
-   problem.
-   A description of the problem can be found here:
-   http://en.wikipedia.org/wiki/Vehicle_routing_problem.
-
-   Distances are in meters.
-"""
 import re
 from ortools.constraint_solver import routing_enums_pb2
 from ortools.constraint_solver import pywrapcp
-from Distance_Matrix import distance_matrix
+from Prerequisites import distance_matrix
 
 def create_data_model():
     """Stores the data for the problem."""
@@ -23,7 +14,6 @@ def create_data_model():
 
 def print_solution(data, manager, routing, solution):
     """Prints solution on console."""
-    print(f'Objective: {solution.ObjectiveValue()}')
     max_route_distance = 0
     for vehicle_id in range(data['num_vehicles']):
         index = routing.Start(vehicle_id)
@@ -39,16 +29,14 @@ def print_solution(data, manager, routing, solution):
         plan_output += 'Distance of the route: {}m\n'.format(route_distance)
         global apriori_list
         apriori_list = plan_output
-        print(plan_output)
         apriori_list = apriori_list.split("\n", 1)[1]
         apriori_list = apriori_list.rsplit("\n", 3)[0]
         apriori_list = re.sub(r'\(\d+\)|Load|->', '', apriori_list)
         apriori_list = apriori_list.split()
         for i in range(0, len(apriori_list)):
             apriori_list[i] = int(apriori_list[i])
-        print("\nList for the Simulation:\n", apriori_list)
+        print("\n2: Apriori List created\n", apriori_list)
         max_route_distance = max(route_distance, max_route_distance)
-    print('Maximum of the route distances: {}m'.format(max_route_distance))
     return apriori_list
 
 
