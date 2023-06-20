@@ -6,6 +6,8 @@ depot_position = '0M_'
 capacity = 100
 demand_bottom = 10
 demand_top = 70
+demand_arr = [demand_top, demand_bottom]
+demand_mean = np.mean(demand_arr)
 
 # Load data from file
 data = np.loadtxt("cutted_string.txt", delimiter=",")
@@ -25,3 +27,4 @@ for i in range(n):
 distance_matrix = distance_matrix.astype(int)
 # Print distance matrix
 print(distance_matrix)
+print(demand_mean)

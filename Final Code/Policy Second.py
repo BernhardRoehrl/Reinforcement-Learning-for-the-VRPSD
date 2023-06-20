@@ -4,7 +4,7 @@ import os
 import timeit
 import openpyxl
 from Apriori_Revisited import distance_matrix, apriori_list
-from Distance_Matrix import capacity, demand_top, demand_bottom, depot_position, customer_spread
+from Distance_Matrix import capacity, demand_top, demand_bottom, demand_mean, depot_position, customer_spread
 
 start_time = timeit.default_timer()
 apriori_list = apriori_list
@@ -68,6 +68,7 @@ worksheet.cell(row = 1, column=1, value = 'METHOD = ' + solution_prefix + ' DEPO
                 + customer_spread + str(len(apriori_list) - 2) + " CAPACITY = " + str(capacity) + " DEMANDS BETWEEN = "
                 + str(demand_bottom) + "-" + str(demand_top))
 worksheet.cell(row= 21, column=11, value= 'Result last 10k')
+worksheet.cell(row=24, column=11, value= 'Failures')
 #workbook_results = xlsxwriter.Workbook('results')
 #worksheet_results = workbook_results.add_worksheet(solution_prefix)
 
@@ -97,6 +98,7 @@ class Service:
         self.step_distance = step_distance
         self.refill_counter = 0
         self.failure_counter = 0
+        self.failure_result = 0
         self.current_episode_position = 0
 
     def reset_variables(self, capacity):
@@ -145,6 +147,7 @@ class Service:
             """Hinfahren1 und customer partially bedienen"""
             if episode > num_episodes-1000:
                 self.failure_counter += 1
+                self.failure_result += 1
             self.distance += data['distance_matrix'][self.position][customer]
             self.step_distance += data['distance_matrix'][self.position][customer]
             self.position_update(customer)
@@ -174,7 +177,7 @@ class Service:
     def execute_episode(self):
         self.step_distance = 0
         self.old_capacity = self.capacity
-        if self.capacity > capacity*0.25:
+        if self.capacity > demand_mean:
             """Agent chooses action 1: Vehicle must serve"""
             action = 1
             self.serve(self.step, apriori_list[self.step])
@@ -245,7 +248,7 @@ def print_final(file_path1, file_name1, row_position):
         worksheet.cell(row=22, column=11, value=last_10k_avg_distances)
         # logfile and output print for q_Table and exploration_counter
     worksheet.cell(row = 4, column = 11, value = elapsed_time)   # Computational Time to Excel
-    # Processing the 3d Numpy Array: q_table for Excel
+    worksheet.cell(row = 25, column =11, value = vehicle.failure_result)
     workbook.save(workbook_name)
 
 if __name__ == "__main__":

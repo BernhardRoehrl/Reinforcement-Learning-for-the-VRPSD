@@ -17,6 +17,7 @@ data['distance_matrix'] = distance_matrix
 """Create Lists and Parameters"""
 customer_list = []
 avg_distance = []
+last_10k_avg_distance = []
 test_list = []
 capacity = capacity  # Vehicle Capacity Parameter
 demand_bottom = demand_bottom  # Smallest Value Demand can take
@@ -27,7 +28,7 @@ action_refill = 0
 action_serve = 1
 action_space_size = [action_refill, action_serve]
 
-num_episodes = 48000
+num_episodes = 58000
 rewards_all_episodes = []  # List of rewards
 
 learning_rate = 0.04
@@ -91,6 +92,8 @@ worksheet.cell(row = 15, column=11, value = 'Min Exploration Rate')
 worksheet.cell(row = 16, column=11, value = min_exploration_rate)
 worksheet.cell(row = 18, column=11, value = 'Exploration Decay Rate')
 worksheet.cell(row = 19, column=11, value = exploration_decay_rate)
+worksheet.cell(row= 21, column=11, value= 'Result last 10k')
+worksheet.cell(row= 24, column=11, value= 'Failures')
 #workbook_results = xlsxwriter.Workbook('results')
 #worksheet_results = workbook_results.add_worksheet(solution_prefix)
 
@@ -122,6 +125,7 @@ class Service:
         self.step_distance = step_distance
         self.refill_counter = 0
         self.failure_counter = 0
+        self.failure_result = 0
         self.exploration_counter = 0
         self.current_episode_position = 0
 
@@ -161,7 +165,7 @@ class Service:
         self.position_update(customer)
         self.capacity = self.capacity - customer_list[current_step].demand
         customer_list[current_step].demand = 0
-        if episode > num_episodes-1000:
+        if episode > num_episodes-10000:
             self.refill_counter += 1
         return self.position, self.capacity, self.distance, customer_list[
             current_step].demand, self.step_distance, self.refill_counter
@@ -170,8 +174,9 @@ class Service:
         if self.capacity < customer_list[current_step].demand:
             """Failure 1: serve partially -> Go To depot -> Go back -> Fulfill serving"""
             """Hinfahren1 und customer partially bedienen"""
-            if episode > num_episodes-1000:
+            if episode > num_episodes-10000:
                 self.failure_counter += 1
+                self.failure_result += 1
             self.distance += data['distance_matrix'][self.position][customer]
             self.step_distance += data['distance_matrix'][self.position][customer]
             self.position_update(customer)
@@ -201,7 +206,7 @@ class Service:
     def execute_episode(self):
         self.step_distance = 0
         self.old_capacity = self.capacity
-        if episode <= num_episodes - 1000:   # Use e-greedy for exploration and exploitation
+        if episode <= num_episodes - 10000:   # Use e-greedy for exploration and exploitation
             exploration_rate_threshold = random.uniform(0, 1)
             if exploration_rate_threshold < self.exploration_rate:
                 """Explore"""
@@ -229,7 +234,7 @@ class Service:
             elif action == 0:
                 self.refill(self.step, apriori_list[self.step])
         reward = self.step_distance
-        if episode < num_episodes-1000:
+        if episode < num_episodes-10000:
             old_value = q_table[self.old_capacity, apriori_list[self.step], action]
             if self.step+1 < len(apriori_list):
                 best_expected_value = np.min(q_table[self.capacity, apriori_list[self.step+1], :])
@@ -283,6 +288,9 @@ class Customer:
 def print_final(file_path1, file_name1, data, row_position):
     """Function that incorporates all output related information for further useage"""
     avg_distances_per_thousand_episodes = np.split(np.array(avg_distance), num_episodes / 1000)
+    slice_index = max(0, len(avg_distance)-10000)
+    last_10k_distances = avg_distance[slice_index:]
+    last_10k_avg_distances = np.mean(last_10k_distances)
     count = 1000
     rev_value = None
     # Write to log-file
@@ -301,6 +309,7 @@ def print_final(file_path1, file_name1, data, row_position):
             worksheet.cell(row=row_position +3 , column = 9, value = sum(d /1000)/ref_value)
             count += 1000
             row_position += 1
+        worksheet.cell(row=22, column=11, value= last_10k_avg_distances)
         # logfile and output print for q_Table and exploration_counter
         print("The Simulation explored: ", vehicle.exploration_counter)
         outfile.write("Explored: " + str(vehicle.exploration_counter) + "\n")
@@ -318,6 +327,7 @@ def print_final(file_path1, file_name1, data, row_position):
     df.columns = ['Refill', 'Serve']
     df.index.names = ['Customer', 'Capacity']
     worksheet.cell(row = 5, column = 16, value = 'Q-Table')  # Header for q_table
+    worksheet.cell(row = 25, column = 11, value = vehicle.failure_result)
     workbook.save(workbook_name)
     writer = pd.ExcelWriter(workbook_name, engine='openpyxl', mode='a', if_sheet_exists='overlay')
     with writer as writer:
