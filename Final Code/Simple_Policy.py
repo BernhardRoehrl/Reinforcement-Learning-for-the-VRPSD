@@ -216,6 +216,7 @@ def print_final(row_position):
         row_position += 1
     """Print and Write Result of Benchmark"""
     worksheet.cell(row=22, column=11, value=last_10k_avg_distances)
+    print('\n---> Result for 10k Avg= ', last_10k_avg_distances, "<----")
     worksheet.cell(row=4, column=11, value=elapsed_time)  # Write Computational Time
     worksheet.cell(row=25, column=11, value=vehicle.failure_result)
     workbook.save(workbook_name)  # Save and Close Excel File
