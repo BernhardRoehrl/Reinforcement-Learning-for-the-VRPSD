@@ -27,16 +27,18 @@ action_space_size = [action_refill, action_serve]
 
 """Learning Parameters"""
 num_episodes = 30000+(capacity*(len(apriori_list)-2)*8)   # Dynamic Episode Sizing
-#num_episodes = 110000
+num_episodes = int(np.ceil(num_episodes / 1000) * 1000)  # Round up num_episodes to a divider of 1000
+#num_episodes = 75000
+print(num_episodes)
 # Episodes for Benchmarking
 rewards_all_episodes = []  # List of rewards
-learning_rate = 0.04  # How fast to learn --> determines episodes needed
+learning_rate = 0.08  # How fast to learn --> determines episodes needed
 discount_rate = 0.85  # Discounting rate (How much to value future Rewards)
 # Exploration & Exploitation parameters
 exploration_rate = 1.0  # Init Exploration rate
 max_exploration_rate = 1.0  # Exploration probability at start
 min_exploration_rate = 0.1  # Minimum exploration probability guaranteed outside of Benchmarking
-exploration_decay_rate = 0.0001  # Determines How fast to exploit more
+exploration_decay_rate = 0.00005  # Determines How fast to exploit more
 q_table = np.zeros((capacity + 1, len(apriori_list), len(action_space_size)))  # init the q_table
 
 """Saving Process"""
