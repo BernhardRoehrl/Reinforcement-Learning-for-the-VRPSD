@@ -17,6 +17,9 @@ Within the Reinforcement_Learning.py you can adjust some learning parameters. I 
 that work on all kinds of SolomonInstances.
 
 TLDR:
+
 -Put Solomon Instance into input_string.txt
+
 -Set Up Instance Profile in Prerequisites
+
 -Run Reinforcement_Learning.py or Simple_Policy.py
