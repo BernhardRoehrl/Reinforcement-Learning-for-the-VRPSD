@@ -2,9 +2,9 @@ import numpy as np
 
 """Profile"""
 customer_spread = 'R'  # R for Random C for Clustered
-capacity = 100  # Maximum Capacity H of the Vehicle
-demand_bottom = 10  # Minimum possible customer demands
-demand_top = 70  # Maximum possible customer demands
+capacity = 20  # Maximum Capacity H of the Vehicle
+demand_bottom = 1  # Minimum possible customer demands
+demand_top = 15  # Maximum possible customer demands
 demand_arr = [demand_top, demand_bottom]  # Array of Bounds
 demand_mean = np.mean(demand_arr)  # Mean of Demands for Simple Policy
 desired_list = []  # init list
