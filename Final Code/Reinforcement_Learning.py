@@ -25,27 +25,36 @@ action_refill = 0
 action_serve = 1
 action_space_size = [action_refill, action_serve]
 
-"""Learning Parameters"""
-num_episodes = 30000+(capacity*(len(apriori_list)-2)*8)   # Dynamic Episode Sizing
-num_episodes = int(np.ceil(num_episodes / 1000) * 1000)  # Round up num_episodes to a divider of 1000
-#num_episodes = 75000
-print(num_episodes)
-# Episodes for Benchmarking
-rewards_all_episodes = []  # List of rewards
-learning_rate = 0.08  # How fast to learn --> determines episodes needed
-discount_rate = 0.85  # Discounting rate (How much to value future Rewards)
+"""Static Learning Parameters"""
 # Exploration & Exploitation parameters
 exploration_rate = 1.0  # Init Exploration rate
 max_exploration_rate = 1.0  # Exploration probability at start
 min_exploration_rate = 0.1  # Minimum exploration probability guaranteed outside of Benchmarking
-exploration_decay_rate = 0.00005  # Determines How fast to exploit more
+rewards_all_episodes = []  # List of rewards
+#exploration_decay_rate = 0.00001  # Determines How fast to exploit more
 q_table = np.zeros((capacity + 1, len(apriori_list), len(action_space_size)))  # init the q_table
+discount_rate = 0.85  # Discounting rate (How much to value future Rewards)
+#learning_rate = 0.8  # How fast to learn --> determines episodes needed
+
+"""Dynamic Learning Parameters"""
+num_episodes = 30000+(capacity*(len(apriori_list)-2)*8)   # Dynamic Episode Sizing
+num_episodes = int(np.ceil(num_episodes / 1000) * 1000)  # Round up num_episodes to a divider of 1000
+
+def scale_hyperparameters(num_episodes):
+    """Dynamic hyperparameters for learning based on the number of episodes. The learning_rate is calculated using a
+    logarithmic function with a cube root. The exploration_decay_rate is calculated using an exponential function
+    with a square root. Adjust coefficients as needed or just set values manually + and remove this function call"""
+    learning_rate = -0.055 + 0.035 * np.log1p(np.cbrt(num_episodes - 30000))
+    exploration_decay_rate = (0.21 ** np.log1p(np.sqrt(num_episodes - 30000))) * (1 / 10)
+    return learning_rate, exploration_decay_rate
+
+learning_rate, exploration_decay_rate = scale_hyperparameters(num_episodes)
 
 """Saving Process"""
 index = 1  # for looping later on
 solution_prefix = "RL_"  # Indication of method
 customer_spread = customer_spread  # C = Clustered or R = Random Spread Customers
-dataset_name = solution_prefix + customer_spread + str(len(apriori_list) - 2) + "_H" + str(
+dataset_name = customer_spread + "_N" + str(len(apriori_list) - 2) + "_H" + str(
     capacity) + "_D" + str(
     demand_bottom) + "-" + str(demand_top)  # Dynamic Instance Naming
 print("\n3: Executing Reinforcement_Learning.py \nInstance: ", dataset_name)
@@ -95,6 +104,9 @@ def create_customer():
         if customer_x.position == 0:
             customer_x.demand = 0
         customer_list.append(customer_x)
+    if capacity < demand_top:
+        #  Forbidden due to how customer demand and route failure are calculated
+        raise Exception("!!!Demand > Capacity!!!")
     return customer_list
 
 
@@ -309,3 +321,4 @@ if __name__ == "__main__":
         vehicle.post_episode_calculation()  # Capture and prepare calculations after every episode
     elapsed_time = timeit.default_timer() - start_time  # Computational Time
     print_final(index, q_table)  # Save results for later use
+    print("learning_rate = ", learning_rate, "exploration_decay_rate = ", f'{exploration_decay_rate:.20f}')

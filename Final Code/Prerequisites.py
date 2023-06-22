@@ -1,16 +1,15 @@
 import numpy as np
 
 """Profile"""
-customer_spread = 'R'  # R for Random C for Clustered
-capacity = 20  # Maximum Capacity H of the Vehicle
-demand_bottom = 1  # Minimum possible customer demands
-demand_top = 15  # Maximum possible customer demands
+customer_spread = 'R101'  # Name of Solomon Instance R = Random, C = Clustered
+capacity = 55  # Maximum Capacity H of the Vehicle
+demand_bottom = 20  # Minimum possible customer demands
+demand_top = 50  # Maximum possible customer demands
 demand_arr = [demand_top, demand_bottom]  # Array of Bounds
 demand_mean = np.mean(demand_arr)  # Mean of Demands for Simple Policy
-desired_list = []  # init list
 
 """Solomon Instance Cutter"""
-
+desired_list = []  # init list
 with open('input_string.txt', 'r') as file:
     # Read in and cut input for distance calculations
     output_string = ''

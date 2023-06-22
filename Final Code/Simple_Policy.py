@@ -25,7 +25,7 @@ num_episodes = 10000  # Amounts of Episodes the Outer Loop will do. 10k Episodes
 index = 1  # for looping later on
 solution_prefix = "P_"  # Indication of method
 customer_spread = customer_spread  # C = Clustered or R = Random Spread Customers
-dataset_name = solution_prefix + customer_spread + str(len(apriori_list) - 2) + "_H" + str(
+dataset_name = customer_spread + "_N" + str(len(apriori_list) - 2) + "_H" + str(
     capacity) + "_D" + str(
     demand_bottom) + "-" + str(demand_top)  # Dynamic Instance Naming
 print("\n3: Executing Simple_Policy.py \nInstance: ", dataset_name)
@@ -65,6 +65,9 @@ def create_customer():
         if customer_x.position == 0:
             customer_x.demand = 0
         customer_list.append(customer_x)
+    if capacity < demand_top:
+        #  Forbidden due to how customer demand and route failure are calculated
+        raise Exception("!!!Demand > Capacity!!!")
     return customer_list
 
 
