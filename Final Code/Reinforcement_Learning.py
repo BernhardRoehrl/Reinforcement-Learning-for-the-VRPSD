@@ -31,10 +31,10 @@ exploration_rate = 1.0  # Init Exploration rate
 max_exploration_rate = 1.0  # Exploration probability at start
 min_exploration_rate = 0.1  # Minimum exploration probability guaranteed outside of Benchmarking
 rewards_all_episodes = []  # List of rewards
-#exploration_decay_rate = 0.00001  # Determines How fast to exploit more
+exploration_decay_rate = 0.00001  # Determines How fast to exploit more
 q_table = np.zeros((capacity + 1, len(apriori_list), len(action_space_size)))  # init the q_table
 discount_rate = 0.85  # Discounting rate (How much to value future Rewards)
-#learning_rate = 0.8  # How fast to learn --> determines episodes needed
+learning_rate = 0.08  # How fast to learn --> determines episodes needed
 
 """Dynamic Learning Parameters"""
 num_episodes = 30000+(capacity*(len(apriori_list)-2)*8)   # Dynamic Episode Sizing
@@ -48,7 +48,7 @@ def scale_hyperparameters(num_episodes):
     exploration_decay_rate = (0.21 ** np.log1p(np.sqrt(num_episodes - 30000))) * (1 / 10)
     return learning_rate, exploration_decay_rate
 
-learning_rate, exploration_decay_rate = scale_hyperparameters(num_episodes)
+#learning_rate, exploration_decay_rate = scale_hyperparameters(num_episodes)
 
 """Saving Process"""
 index = 1  # for looping later on
