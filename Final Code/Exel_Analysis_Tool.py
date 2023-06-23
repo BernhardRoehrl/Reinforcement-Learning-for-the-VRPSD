@@ -5,7 +5,7 @@ import openpyxl
 input_filename1 = 'P_Results.xlsx'
 input_filename2 = 'RL_Results.xlsx'
 output_filename = 'Excel_Analysis.xlsx'
-
+sheet_name = 'Results'  # Name for the Tab within the Excel_Analysis File
 
 def user_confirm():
     """Function to ask user confirmation"""
@@ -27,20 +27,24 @@ def user_confirm():
 
 def save_to_excel(df, filename, sheet_name):
     """Function to save DataFrame to Excel file"""
+
     try:  # Attempt to open an existing workbook
         book = openpyxl.load_workbook(filename)
     except FileNotFoundError:  # If it does not exist, create a new workbook
         book = openpyxl.Workbook()
         book.save(filename)
     if sheet_name in book.sheetnames:  # check if sheet_name already exists
-        if book[sheet_name].max_row > 1:  # check if sheet contains data (not empty)
-            if not user_confirm():  # Ask user for permission to overwrite
-                sheet_name += '_new'  # Modify sheet_name if user does not want to overwrite
-    # Write DataFrame to the Excel file
-    with pd.ExcelWriter(filename, engine='openpyxl', mode='a', if_sheet_exists='replace') as writer:
-        if sheet_name in writer.sheets:
-            startrow = writer.sheets[sheet_name].max_row
-            df.to_excel(writer, index=False, startrow=startrow, sheet_name=sheet_name)
+        if not user_confirm():  # Ask user for permission to overwrite
+            sheet_name += '_new'  # Modify sheet_name if user does not want to overwrite
+            with pd.ExcelWriter(filename, engine='openpyxl', mode='a', if_sheet_exists='new') as writer:
+                df.to_excel(writer, index=False, sheet_name=sheet_name)  # Write DataFrame to the Excel file
+        else:
+            with pd.ExcelWriter(filename, engine='openpyxl', mode='a', if_sheet_exists='replace') as writer:
+                df.to_excel(writer, index=False, sheet_name=sheet_name)
+    else:
+        with pd.ExcelWriter(filename, engine='openpyxl', mode='a') as writer:
+            df.to_excel(writer, index=False, sheet_name=sheet_name)
+
 
 
 def extract_data(input_filename):
@@ -63,5 +67,6 @@ df_output1 = pd.DataFrame(data1, columns=['Instance', 'SP Result'])
 df_output2 = pd.DataFrame(data2, columns=['Instance', 'RL Result'])
 # Merge Instances to get 1 Column only IF the names are identical to prevent mistakes
 df_output = pd.merge(df_output1, df_output2, on='Instance')
+print(df_output)
 # Save the merged DataFrame to the output file
-save_to_excel(df=df_output, filename=output_filename, sheet_name='Results')
+save_to_excel(df=df_output, filename=output_filename, sheet_name=sheet_name)
