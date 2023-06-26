@@ -1,4 +1,6 @@
 import numpy as np
+import json
+import os
 
 """Profile"""
 solomon_id = 0  # Contains Unique ID of Instance and C/R in the beginning for Clustered or Random Customer Spread
@@ -11,14 +13,28 @@ demand_mean = np.mean(demand_arr)  # Mean of Demands for Simple Policy
 
 class Instance:
 
-    def __init__(self, filename):
-        self.filename = filename
-        self.solomon_id, self.customers = self.parse_file()
-        self.distance_matrix = self.create_distance_matrix(self.customers)
+    def __init__(self, filename, size, capacity, demand_bottom, demand_top):
+        self.filedir = r'D:\Code\VRP OR\Solomon Instances'
+        self.filename = os.path.join(self.filedir, filename if filename.endswith('.txt') else filename + ".txt")
+        self.size = size
         self.demand_top = demand_top
         self.demand_bottom = demand_bottom
-        self.demand_mean = np.mean([self.demand_top, self.demand_bottom])
         self.capacity = capacity
+        self.demand_mean = np.mean([self.demand_top, self.demand_bottom])
+        self.solomon_id, self.customers = self.parse_file()
+        self.distance_matrix, self.customers = self.create_distance_matrix()
+        self.capacity_check()
+        self.profile = {
+            "customer_spread": self.solomon_id[0],
+            "solomon_id": self.solomon_id[1:],
+            "N": int(len((self.customers)))-1,
+            "capacity": self.capacity,
+            "Demand_Top": self.demand_top,
+            "Demand_Bottom": self.demand_bottom,
+            "%": self.capacity/self.demand_mean,
+        }
+        self.instance_name = f"{self.profile['customer_spread']}{self.profile['solomon_id']}_N{self.profile['N']}_H{self.profile['capacity']}_D{self.profile['Demand_Bottom']}-{self.profile['Demand_Top']}_%_{round(self.profile['%'], 2)}"
+
 
     def parse_file(self):
         with open(self.filename, 'r') as file:
@@ -37,39 +53,41 @@ class Instance:
                     customers.append(customer)
         return solomon_id, customers
 
+    def capacity_check(self):
+        if self.capacity < self.demand_top:
+            raise Exception("!!!ILLEGAL PROFILE CAPCITY HAS TO BE EQUAL OR BIGGER THAN DEMAND TOP!!!")
+
+        if self.demand_bottom > self.demand_top:
+            raise Exception("!!!ILLEGAL PROFILE Demand Bottom HAS TO BE EQUAL OR smaller THAN DEMAND TOP!!!")
+
+
     def euclidean_distance(self, x1, y1, x2, y2):
         """calculate distances"""
         return ((x1 - x2) ** 2 + (y1 - y2) ** 2) ** 0.5
 
-    def create_distance_matrix(self, customers):
-        n = len(customers)
+    def create_distance_matrix(self):
+        self.customers = [customer for customer in self.customers if customer['id'] <= self.size]
+
+        n = len(self.customers)
         distance_matrix = np.zeros((n, n))  # init distance matrix with zeros
         for i in range(n):  # Go through data
             for j in range(i + 1, n):
-                x1, y1 = customers[i]['x'], customers[i]['y']
-                x2, y2 = customers[j]['x'], customers[j]['y']
+                x1, y1 = self.customers[i]['x'], self.customers[i]['y']
+                x2, y2 = self.customers[j]['x'], self.customers[j]['y']
                 distance = self.euclidean_distance(x1, y1, x2, y2)
                 distance_matrix[i, j] = distance
                 distance_matrix[j, i] = distance
         distance_matrix = distance_matrix.astype(int)
-        return distance_matrix
-
-    def reduce_customer_size(self, new_size):
-        """only an example so far Should do the rear end cutting to the new customer size."""
-        # self.customers = self.customers[:new_size]
-        # self.distance_matrix = self.distance_matrix[:new_size, :new_size]
-        # return self.customers, self.distance_matrix
-        pass
-
-    def main(self):
-        self.create_distance_matrix(self.customers)
-        print("1: Distance Matrix Created")
-        print(self.customers)
-        print(self.distance_matrix)
+        return distance_matrix, self.customers
 
 
 if __name__ == "__main__":
-    solomon_c108 = Instance('input_string.txt')
-    print("Customers: ", solomon_c108.customers)
-    print("\nDemand Mean: ", solomon_c108.demand_mean)
-    print("\nDM: ", solomon_c108.distance_matrix)
+    solomon_flex = Instance('C101', size=5, capacity=19, demand_bottom=20, demand_top=19)
+    print("Customers: ", solomon_flex.customers)
+    print("\nDemand Mean: ", solomon_flex.demand_mean)
+    print("\nDM: ", solomon_flex.distance_matrix)
+    print(len(solomon_flex.customers))
+    print(solomon_flex.distance_matrix)
+    print(solomon_flex.instance_name)
+
+
