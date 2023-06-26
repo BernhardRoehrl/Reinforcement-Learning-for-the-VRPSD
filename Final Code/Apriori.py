@@ -53,7 +53,6 @@ class Apriori:
                     apriori_list = apriori_list.split()
                     for i in range(0, len(apriori_list)):
                         apriori_list[i] = int(apriori_list[i])
-                    print("\n2: Apriori List created\n", apriori_list)
                     max_route_distance = max(route_distance, max_route_distance)
                 return apriori_list
 
