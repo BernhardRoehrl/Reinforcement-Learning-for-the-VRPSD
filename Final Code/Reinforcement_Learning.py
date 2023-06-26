@@ -86,9 +86,6 @@ def saving_process(instance, num_episodes, learning_rate, exploration_decay_rate
     worksheet.cell(row=24, column=11, value='Failures')
     return workbook, worksheet, dataset_name, workbook_name
 
-"""Function & Classes"""
-
-
 def create_customer(instance, apriori_list):
     """Creates Customer_List with random demands & position from Apriori_List"""
     customer_list.clear()
@@ -160,7 +157,7 @@ class Service:
         return self.position, self.capacity, self.distance, customer_list[
             current_step].demand, self.step_distance, self.refill_counter
 
-    def serve(self, current_step, customer, num_episodes,data, capacity, episode):
+    def serve(self, current_step, customer, num_episodes, data, capacity, episode):
         """Function handling both scenarios for serving. Failure or successful 1st time-servings"""
         if self.capacity < customer_list[current_step].demand:
             """Failure: serve partially -> Go To depot -> Go back -> Fulfill serving"""
