@@ -1,6 +1,6 @@
 import os
 from openpyxl.styles import Alignment
-from Prerequisites import Instance
+from Instance_Prerequisites import Instance
 import Reinforcement_Learning_Efficient
 import Simple_Policy_Efficient
 from tqdm import tqdm
