@@ -153,7 +153,7 @@ class Customer:
         self.demand = demand
 
 
-def print_final():
+def print_final(vehicle):
     """Function that incorporates all output related information for further usage, give index for row_position"""
     """Calculate All Kinds of Distances for Evaluation out of Lists"""
     avg_distances_per_thousand_episodes = np.split(np.array(avg_distance), num_episodes / 1000)
@@ -161,7 +161,8 @@ def print_final():
     last_10k_distances = avg_distance[slice_index:]
     last_10k_avg_distances = np.mean(last_10k_distances)  # Get Performance of Benchmark
     elapsed_time = timeit.default_timer() - start_time
-    return last_10k_avg_distances, elapsed_time
+    failure_result = vehicle.failure_result
+    return last_10k_avg_distances, elapsed_time, failure_result
 
 def main(instance):
     """Core Execution of Simple Policy: Returns result and computational time, for more output refer to Simple
@@ -173,13 +174,13 @@ def main(instance):
         for x in apriori_list:
             vehicle.execute_episode(demand_mean, apriori_list, data, capacity)
         vehicle.post_episode_calculation()
-    result, time = print_final()
-    return result, time
+    result, time, failure_result = print_final(vehicle)
+    return result, time, failure_result
 
 
 
 
 if __name__ == "__main__":
     instance = Instance('C108', 100, 100, 10, 70)
-    result, time = main(instance)
-    print("result:", result, "time: ", time)
+    result, time, failure_result = main(instance)
+    print("result:", result, "time: ", time, "failure: ", failure_result)

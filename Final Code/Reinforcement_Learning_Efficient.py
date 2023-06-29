@@ -111,10 +111,12 @@ class Service:
         return self.position, self.capacity, self.distance, customer_list[
             current_step].demand, self.step_distance, self.refill_counter
 
-    def serve(self, current_step, customer, data, capacity):
+    def serve(self, current_step, customer, data, capacity, episode, num_episodes):
         """Function handling both scenarios for serving. Failure or successful 1st time-servings"""
         if self.capacity < customer_list[current_step].demand:
             """Failure: serve partially -> Go To depot -> Go back -> Fulfill serving"""
+            if episode > num_episodes - 10000:
+                self.failure_result += 1
             # 1st Distance: Serve customer partially
             self.distance_update(customer, data)
             self.position_update(customer)
@@ -150,14 +152,14 @@ class Service:
                 """Explore"""
                 action = random.choice(action_space_size)  # Choose Action on Random
                 if action == 1:  # Agent chooses action 1: Vehicle must serve
-                    self.serve(self.step, apriori_list[self.step], data, capacity)
+                    self.serve(self.step, apriori_list[self.step], data, capacity, episode, num_episodes)
                 else:  # Agent chooses action 2: refilling
                     self.refill(self.step, apriori_list[self.step], data, capacity)
             else:
                 """Exploit"""  # Agent chooses lowest Q-Value for state action combination
                 action = np.argmin(q_table[self.old_capacity, apriori_list[self.step], :])
                 if action == 1:  # Agent chooses action 1: Vehicle must serve
-                    self.serve(self.step, apriori_list[self.step], data, capacity)
+                    self.serve(self.step, apriori_list[self.step], data, capacity, episode, num_episodes)
                 elif action == 0:  # Agent chooses action 2: refilling
                     self.refill(self.step, apriori_list[self.step], data, capacity)
         else:
@@ -165,7 +167,7 @@ class Service:
             # Agent chooses lowest Q-Value for state action combination
             action = np.argmin(q_table[self.old_capacity, apriori_list[self.step], :])
             if action == 1:  # Agent chooses action 1: Vehicle must serve
-                self.serve(self.step, apriori_list[self.step], data, capacity)
+                self.serve(self.step, apriori_list[self.step], data, capacity, episode, num_episodes)
             elif action == 0:  # Agent chooses action 2: refilling
                 self.refill(self.step, apriori_list[self.step], data, capacity)
         reward = self.step_distance  # Set immediate reward to current step_distance
@@ -204,14 +206,15 @@ class Customer:
         """Change Customer Demand"""
         self.demand = demand
 
-def print_final():
+def print_final(vehicle):
     """Function that incorporates all output related information for further usage, give index for row_position"""
     """Calculate All Kinds of Distances for Evaluation out of Lists"""
     slice_index = max(0, len(avg_distance) - 10000)
     last_10k_distances = avg_distance[slice_index:]
     last_10k_avg_distances = np.mean(last_10k_distances)  # Get Performance of Benchmark
     elapsed_time = timeit.default_timer() - start_time
-    return last_10k_avg_distances, elapsed_time
+    failure_result = vehicle.failure_result
+    return last_10k_avg_distances, elapsed_time, failure_result
 
 def main(instance):
     data, demand_bottom, demand_top, capacity, q_table, apriori_list = LoadIn_Instance(instance)
@@ -222,11 +225,11 @@ def main(instance):
         for x in apriori_list:
             vehicle.execute_episode(num_episodes, q_table, learning_rate, data, capacity, apriori_list, episode)
         vehicle.post_episode_calculation(exploration_decay_rate, episode)
-    result, time = print_final()
-    return result, time
+    result, time, failure_result = print_final(vehicle)
+    return result, time, failure_result
 
 
 if __name__ == "__main__":
     instance = Instance('C108', 100, 100, 10, 70)
-    result, time = main(instance)
-    print("result: ", result, "time: ", time)
+    result, time, failure_result = main(instance)
+    print("result: ", result, "time: ", time, "Failures: ", failure_result)

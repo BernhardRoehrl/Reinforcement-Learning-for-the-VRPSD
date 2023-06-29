@@ -29,10 +29,10 @@ class Instance:
             "capacity": self.capacity,
             "Demand_Top": self.demand_top,
             "Demand_Bottom": self.demand_bottom,
-            "%": self.capacity / self.demand_mean,
+            "Capacity Stress": (self.capacity / self.demand_mean),
             "InstanceSize": self.instance_size_category
         }
-        self.instance_name = f"{self.profile['customer_spread']}{self.profile['solomon_id']}_N{self.profile['N']}_H{self.profile['capacity']}_D{self.profile['Demand_Bottom']}-{self.profile['Demand_Top']}_%{round(self.profile['%'], 2)}"
+        self.instance_name = f"{self.profile['customer_spread']}{self.profile['solomon_id']}_N{self.profile['N']}_H{self.profile['capacity']}_D{self.profile['Demand_Bottom']}-{self.profile['Demand_Top']}"
         # One Way Print out of the whole important configuration
 
     def parse_file(self):
