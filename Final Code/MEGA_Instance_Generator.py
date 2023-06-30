@@ -17,10 +17,10 @@ solomon_files = [f for f in os.listdir(solomon_dir) if os.path.isfile(os.path.jo
 """Instance-Profiles"""
 customer_sizes = [5, 10, 15, 20, 30, 40, 50, 60, 70, 80, 90, 100]   # all customer sizes to be tested
 demand_configurations = [  # all demand_capacity_configurations to test
-    {"demand_bottom": 1, "demand_top": 10, "capacity": 15},
-    {"demand_bottom": 1, "demand_top": 10, "capacity": 100},
-    {"demand_bottom": 10, "demand_top": 50, "capacity": 70},
-    {"demand_bottom": 1, "demand_top": 99, "capacity": 100},
+    {"demand_bottom": 1, "demand_top": 10, "capacity": 15},  # Small Demand, Small Surplus
+    {"demand_bottom": 1, "demand_top": 10, "capacity": 100},  # Small Demand, Large Surplus
+    {"demand_bottom": 10, "demand_top": 50, "capacity": 70},  # Moderate Demand, Moderate Surplus
+    {"demand_bottom": 1, "demand_top": 99, "capacity": 100},  # Large Demand, Small Surplus
 ]
 """Progress Bar"""
 total_iterations = len(solomon_files) * len(customer_sizes) * len(demand_configurations)
