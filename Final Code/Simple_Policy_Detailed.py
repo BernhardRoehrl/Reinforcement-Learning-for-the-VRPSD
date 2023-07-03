@@ -20,8 +20,9 @@ def LoadIn_instance(instance):
     data['distance_matrix'] = instance.distance_matrix  # Import distance_matrix
     capacity = instance.capacity  # Vehicle Capacity Parameter
     demand_bottom = instance.demand_bottom  # Smallest Value Demand customer can have
-    demand_top = instance.demand_top  # Highest Value Demand customer can have
-    demand_mean = instance.demand_mean  # Average Demand of customers used to decide
+    demand_top = instance.demand_top
+    demand_values = [demand_top, demand_bottom]  # Highest Value Demand customer can have
+    demand_mean = np.mean(demand_values)  # Average Demand of customers used to decide
     return data, demand_bottom, demand_top, capacity, apriori_list, demand_mean
 
 def saving_process(instance):
@@ -220,6 +221,7 @@ def print_final(row_position, worksheet, workbook, workbook_name, vehicle):
     worksheet.cell(row=4, column=11, value=elapsed_time)  # Write Computational Time
     worksheet.cell(row=25, column=11, value=vehicle.failure_result)
     workbook.save(workbook_name)  # Save and Close Excel File
+    return last_10k_avg_distances
 
 def main(instance):
     data, demand_bottom, demand_top, capacity, apriori_list, demand_mean = LoadIn_instance(instance)
@@ -230,12 +232,13 @@ def main(instance):
         for x in apriori_list:
             vehicle.execute_episode(demand_mean, apriori_list, data, capacity, worksheet, episode, x)
         vehicle.post_episode_calculation()
-    print_final(1, worksheet, workbook, workbook_name, vehicle)
-
+    last_10k_avg_distances = print_final(1, worksheet, workbook, workbook_name, vehicle)
+    return last_10k_avg_distances
 
 
 
 
 if __name__ == "__main__":
-    instance = Instance('C108', 100, 100, 10, 70)
-    main(instance)
+    instance = Instance('C109', 90, 70, 10, 50)
+    last_10k_avg_distances = main(instance)
+    print(last_10k_avg_distances)

@@ -8,7 +8,6 @@ import pandas as pd
 import openpyxl
 from openpyxl.worksheet.table import Table, TableStyleInfo
 
-
 """Fixed"""
 data = []  # for our dataframe
 solomon_dir = r'D:\Code\VRP OR\Solomon Instances'  # location of Solomon Instances
@@ -25,7 +24,6 @@ demand_configurations = [  # all demand_capacity_configurations to test
 """Progress Bar"""
 total_iterations = len(solomon_files) * len(customer_sizes) * len(demand_configurations)
 pbar = tqdm(total=total_iterations)
-
 
 
 """Core Loop"""

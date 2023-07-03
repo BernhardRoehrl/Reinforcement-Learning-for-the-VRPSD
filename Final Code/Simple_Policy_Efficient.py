@@ -4,8 +4,6 @@ import timeit
 from Apriori import Apriori
 from Instance_Prerequisites import Instance
 
-"""Import Data"""
-start_time = timeit.default_timer()  # Set start tim
 """Create Lists and Parameters"""
 customer_list = []  # Init customer list
 avg_distance = []  # Init avg_distance
@@ -153,7 +151,7 @@ class Customer:
         self.demand = demand
 
 
-def print_final(vehicle):
+def print_final(vehicle, start_time):
     """Function that incorporates all output related information for further usage, give index for row_position"""
     """Calculate All Kinds of Distances for Evaluation out of Lists"""
     avg_distances_per_thousand_episodes = np.split(np.array(avg_distance), num_episodes / 1000)
@@ -167,6 +165,7 @@ def print_final(vehicle):
 def main(instance):
     """Core Execution of Simple Policy: Returns result and computational time, for more output refer to Simple
     Policy_Detailed """
+    start_time = timeit.default_timer()  # Set start time
     data, demand_bottom, demand_top, capacity, apriori_list, demand_mean = LoadIn_instance(instance)
     vehicle = Service(0, capacity, 0, 0)
     for episode in range(num_episodes):
@@ -174,13 +173,13 @@ def main(instance):
         for x in apriori_list:
             vehicle.execute_episode(demand_mean, apriori_list, data, capacity)
         vehicle.post_episode_calculation()
-    result, time, failure_result = print_final(vehicle)
+    result, time, failure_result = print_final(vehicle, start_time)
     return result, time, failure_result
 
 
 
 
 if __name__ == "__main__":
-    instance = Instance('C108', 100, 100, 10, 70)
+    instance = Instance('C208', 100, 100, 1, 10)
     result, time, failure_result = main(instance)
     print("result:", result, "time: ", time, "failure: ", failure_result)

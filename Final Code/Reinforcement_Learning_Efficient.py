@@ -4,9 +4,7 @@ import timeit
 from Apriori import Apriori
 from Instance_Prerequisites import Instance
 
-"""Import Data"""
-start_time = timeit.default_timer()  # Set start timer
-"""Additional Parameters for QLearning"""
+"""Additional Parameters for Q-Learning"""
 action_refill = 0
 action_serve = 1
 action_space_size = [action_refill, action_serve]
@@ -206,7 +204,7 @@ class Customer:
         """Change Customer Demand"""
         self.demand = demand
 
-def print_final(vehicle):
+def print_final(vehicle, start_time):
     """Function that incorporates all output related information for further usage, give index for row_position"""
     """Calculate All Kinds of Distances for Evaluation out of Lists"""
     slice_index = max(0, len(avg_distance) - 10000)
@@ -217,6 +215,7 @@ def print_final(vehicle):
     return last_10k_avg_distances, elapsed_time, failure_result
 
 def main(instance):
+    start_time = timeit.default_timer()  # Set start timer
     data, demand_bottom, demand_top, capacity, q_table, apriori_list = LoadIn_Instance(instance)
     learning_rate, exploration_decay_rate, num_episodes = scale_hyperparameters(instance, apriori_list)
     vehicle = Service(0, 0, 0, capacity)
@@ -225,7 +224,7 @@ def main(instance):
         for x in apriori_list:
             vehicle.execute_episode(num_episodes, q_table, learning_rate, data, capacity, apriori_list, episode)
         vehicle.post_episode_calculation(exploration_decay_rate, episode)
-    result, time, failure_result = print_final(vehicle)
+    result, time, failure_result = print_final(vehicle, start_time)
     return result, time, failure_result
 
 
