@@ -7,7 +7,7 @@ from Instance_Prerequisites import Instance
 """Additional Parameters for Q-Learning"""
 action_refill = 0
 action_serve = 1
-action_space_size = [action_refill, action_serve]
+action_space_size = [action_refill, action_serve]  # For choosing an action on random
 """Create Lists and Parameters"""
 customer_list = []  # Init customer list
 avg_distance = []  # Init avg_distance
@@ -20,8 +20,10 @@ min_exploration_rate = 0.1  # Minimum exploration probability guaranteed outside
 rewards_all_episodes = []  # List of rewards
 discount_rate = 0.85  # Discounting rate (How much to value future Rewards)
 
+
 def LoadIn_Instance(instance):
-    apriori_list = Apriori.create_apriori_list(instance)
+    """Importing all Instance Related Prerequisites depending on the Instance"""
+    apriori_list = Apriori.create_apriori_list(instance)  # utilizing Google-OR Tools
     data = {}  # Stores the data for the problem
     data['distance_matrix'] = instance.distance_matrix  # Import distance_matrix
     capacity = instance.capacity  # Vehicle Capacity Parameter
@@ -30,6 +32,7 @@ def LoadIn_Instance(instance):
     q_table = np.zeros((capacity + 1, len(apriori_list), len(action_space_size)))  # init the q_table
     """Dynamic Learning Parameters"""
     return data, demand_bottom, demand_top, capacity, q_table, apriori_list
+
 
 def scale_hyperparameters(instance, apriori_list):
     """Dynamic hyperparameters for learning based on the number of episodes. The learning_rate is calculated using a
@@ -40,6 +43,7 @@ def scale_hyperparameters(instance, apriori_list):
     learning_rate = -0.055 + 0.035 * np.log1p(np.cbrt(num_episodes - 30000))
     exploration_decay_rate = (0.21 ** np.log1p(np.sqrt(num_episodes - 30000))) * (1 / 10)
     return learning_rate, exploration_decay_rate, num_episodes
+
 
 def create_customer(instance, apriori_list):
     """Creates Customer_List with random demands & position from Apriori_List"""
@@ -57,6 +61,7 @@ def create_customer(instance, apriori_list):
 
 class Service:
     """For the vehicle and tracking distance"""
+
     def __init__(self, position, distance, step_distance, capacity):
         self.exploration_rate = exploration_rate
         self.capacity = capacity
@@ -204,31 +209,33 @@ class Customer:
         """Change Customer Demand"""
         self.demand = demand
 
+
 def print_final(vehicle, start_time):
     """Function that incorporates all output related information for further usage, give index for row_position"""
     """Calculate All Kinds of Distances for Evaluation out of Lists"""
     slice_index = max(0, len(avg_distance) - 10000)
     last_10k_distances = avg_distance[slice_index:]
     last_10k_avg_distances = np.mean(last_10k_distances)  # Get Performance of Benchmark
-    elapsed_time = timeit.default_timer() - start_time
+    total_time = timeit.default_timer() - start_time  # from start to finish
     failure_result = vehicle.failure_result
-    return last_10k_avg_distances, elapsed_time, failure_result
+    return last_10k_avg_distances, total_time, failure_result
+
 
 def main(instance):
     start_time = timeit.default_timer()  # Set start timer
-    data, demand_bottom, demand_top, capacity, q_table, apriori_list = LoadIn_Instance(instance)
-    learning_rate, exploration_decay_rate, num_episodes = scale_hyperparameters(instance, apriori_list)
-    vehicle = Service(0, 0, 0, capacity)
+    data, demand_bottom, demand_top, capacity, q_table, apriori_list = LoadIn_Instance(instance)  # Import Instance
+    learning_rate, exploration_decay_rate, num_episodes = scale_hyperparameters(instance, apriori_list)  # set scaling
+    vehicle = Service(0, 0, 0, capacity)  # Init the vehicle
     for episode in range(num_episodes):
         vehicle.reset_variables(capacity, instance, apriori_list)
         for x in apriori_list:
             vehicle.execute_episode(num_episodes, q_table, learning_rate, data, capacity, apriori_list, episode)
         vehicle.post_episode_calculation(exploration_decay_rate, episode)
-    result, time, failure_result = print_final(vehicle, start_time)
-    return result, time, failure_result
+    result, total_time, failure_result = print_final(vehicle, start_time)
+    return result, total_time, failure_result
 
 
 if __name__ == "__main__":
-    instance = Instance('C108', 100, 100, 10, 70)
-    result, time, failure_result = main(instance)
+    instance = Instance('C102', 10, 100, 1, 10)  # Define the desired Instance Attributes
+    result, time, failure_result = main(instance)  # Get desired values
     print("result: ", result, "time: ", time, "Failures: ", failure_result)
