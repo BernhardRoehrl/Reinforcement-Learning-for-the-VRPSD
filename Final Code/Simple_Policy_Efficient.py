@@ -11,7 +11,8 @@ last_10k_avg_distance = []  # Init List for Results out of Benchmarking
 num_episodes = 10000  # Amounts of Episodes the Outer Loop will do. 10k Episodes for Benchmarking
 
 def LoadIn_instance(instance):
-    apriori_list = Apriori.create_apriori_list(instance)
+    """Importing all Instance Related Prerequisites depending on the Instance"""
+    apriori_list = Apriori.create_apriori_list(instance)  # utilizing Google-OR Tools
     data = {}  # Stores the data for the problem
     data['distance_matrix'] = instance.distance_matrix  # Import distance_matrix
     capacity = instance.capacity  # Vehicle Capacity Parameter
