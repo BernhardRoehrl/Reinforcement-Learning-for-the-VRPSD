@@ -20,11 +20,11 @@ Class Instance File. To create a class you need the name of the Solomonfile, the
 
 ### Apriori
 
-Basically handling the "routing". You can change the Google OR Tools FirstSolutionStrategy.PATH_CHEAPEST_ARC to whatever you prefer in Line 101. Sets Customer Order via a priori and creates the distance matrix.
+Handling everything related to the Google OR Tool solving. You can change the Google OR Tools FirstSolutionStrategy.PATH_CHEAPEST_ARC to whatever you prefer in Line 101. Sets Customer Order via a priori and creates the distance matrix.
 
 ### Mega Instance Generator
 
-Nested for loop and result generation with xlsx output via pandas and openpyxl. Currently, creates the 1920 instances. Saves to results.xlsx with advanced pre-processed columns for easier analysis.
+Nested for loop and result generation with xlsx output via pandas and openpyxl. Currently, creates the 1920 instances. Saves to results.xlsx with advanced pre-processed columns for easier analysis. Uses the Reinforcement/SimplePolicy_Efficient.py
 
 ### XLSX
 
