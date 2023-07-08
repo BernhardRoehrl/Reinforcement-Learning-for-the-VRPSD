@@ -4,7 +4,7 @@ Final Code Contains the actual Project.
 
 The Final clode is split between:
 
--Simple Policy
+- Simple Policy
     -A detailed version for specifically examining a single or multiple instances. Saves to P_Results.
     -A efficient version for fast Quick Results
 -Reinforcement Learning
