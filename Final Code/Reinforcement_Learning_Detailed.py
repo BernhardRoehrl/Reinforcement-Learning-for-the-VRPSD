@@ -6,16 +6,16 @@ import openpyxl
 from Apriori import Apriori
 from Instance_Prerequisites import Instance
 
-"""Import Data"""
-start_time = timeit.default_timer()  # Set start timer
-"""Additional Parameters for QLearning"""
+"""Action Space for QLearning"""
 action_refill = 0
 action_serve = 1
-action_space_size = [action_refill, action_serve]
+action_space_size = [action_refill, action_serve]  # For choosing an action on random
+
 """Create Lists and Parameters"""
 customer_list = []  # Init customer list
 avg_distance = []  # Init avg_distance
 last_10k_avg_distance = []  # Init List for Results out of Benchmarking
+
 """Static Learning Parameters"""
 # Exploration & Exploitation parameters
 exploration_rate = 1.0  # Init Exploration rate
@@ -24,8 +24,10 @@ min_exploration_rate = 0.1  # Minimum exploration probability guaranteed outside
 rewards_all_episodes = []  # List of rewards
 discount_rate = 0.85  # Discounting rate (How much to value future Rewards)
 
+
 def LoadIn_Instance(instance):
-    apriori_list = Apriori.create_apriori_list(instance)
+    """Importing all Instance Related Prerequisites depending on the Instance"""
+    apriori_list = Apriori.create_apriori_list(instance)  # utilizing Google-OR Tools
     data = {}  # Stores the data for the problem
     data['distance_matrix'] = instance.distance_matrix  # Import distance_matrix
     capacity = instance.capacity  # Vehicle Capacity Parameter
@@ -35,16 +37,17 @@ def LoadIn_Instance(instance):
     """Dynamic Learning Parameters"""
     return data, demand_bottom, demand_top, capacity, q_table, apriori_list
 
+
 def scale_hyperparameters(instance, apriori_list):
     """Dynamic hyperparameters for learning based on the number of episodes. The learning_rate is calculated using a
     logarithmic function with a cube root. The exploration_decay_rate is calculated using an exponential function
     with a square root. Adjust coefficients as needed or just set values manually + and remove this function call"""
     num_episodes = 30000 + (instance.capacity * (len(apriori_list) - 2) * 8)  # Dynamic Episode Sizing
     num_episodes = int(np.ceil(num_episodes / 1000) * 1000)  # Round up num_episodes to a divider of 1000
-
     learning_rate = -0.055 + 0.035 * np.log1p(np.cbrt(num_episodes - 30000))
     exploration_decay_rate = (0.21 ** np.log1p(np.sqrt(num_episodes - 30000))) * (1 / 10)
     return learning_rate, exploration_decay_rate, num_episodes
+
 
 def saving_process(instance, num_episodes, learning_rate, exploration_decay_rate):
     index = 1  # for looping later on
@@ -72,6 +75,7 @@ def saving_process(instance, num_episodes, learning_rate, exploration_decay_rate
     worksheet.cell(row=3, column=8, value='Average Distance')
     worksheet.cell(row=3, column=9, value='Relative Change')
     worksheet.cell(row=3, column=11, value='Time for Computation in (s)')
+    worksheet.cell(row=3, column=13, value='Time without learning in (s)')
     worksheet.cell(row=6, column=11, value='Episodes')
     worksheet.cell(row=7, column=11, value=num_episodes)
     worksheet.cell(row=9, column=11, value='Learning Rate')
@@ -85,6 +89,7 @@ def saving_process(instance, num_episodes, learning_rate, exploration_decay_rate
     worksheet.cell(row=21, column=11, value='Result last 10k')
     worksheet.cell(row=24, column=11, value='Failures')
     return workbook, worksheet, dataset_name, workbook_name
+
 
 def create_customer(instance, apriori_list):
     """Creates Customer_List with random demands & position from Apriori_List"""
@@ -147,6 +152,7 @@ class Service:
         self.distance_update(0, data)
         self.position_update(0)
         self.capacity = capacity  # Refilling the Capacity
+
         """Move Vehicle from depot to next customer and serve"""
         self.distance_update(customer, data)
         self.position_update(customer)
@@ -188,7 +194,8 @@ class Service:
             self.position_update(customer)
             return customer_list[current_step].demand, self.capacity, self.position, self.distance, self.step_distance
 
-    def execute_episode(self, num_episodes, q_table, learning_rate, worksheet, data, capacity, apriori_list, episode, x):
+    def execute_episode(self, num_episodes, q_table, learning_rate, worksheet, data, capacity, apriori_list, episode,
+                        x):
         """Core function executing the service for one step/customer/decision epoch"""
         self.step_distance = 0  # Reset step distance at the beginning of each
         self.old_capacity = self.capacity  # Update Capacities
@@ -227,6 +234,7 @@ class Service:
                 best_expected_value = 0
             bellman_term = (reward + discount_rate * best_expected_value - old_value)
             q_table[self.old_capacity, apriori_list[self.step], action] = old_value + learning_rate * bellman_term
+
         """Preparing next Cycle"""
         self.rewards_current_episodes += reward  # Accumulate step distance for whole episode
         self.step = self.step + 1  # Adjustments for next episode
@@ -264,8 +272,12 @@ class Customer:
         self.demand = demand
 
 
-def print_final(row_position, q_table, num_episodes, worksheet, workbook, workbook_name, dataset_name, vehicle):
+def print_final(row_position, q_table, num_episodes, worksheet, workbook, workbook_name, dataset_name, vehicle,
+                start_time, learning_time):
     """Function that incorporates all output related information for further usage, give index for row_position"""
+    total_time = timeit.default_timer() - start_time  # from start to finish
+    non_training_time = total_time - learning_time  # Time cleared of learning
+
     """Calculate All Kinds of Distances for Evaluation out of Lists"""
     avg_distances_per_thousand_episodes = np.array_split(np.array(avg_distance), num_episodes // 1000)
     slice_index = max(0, len(avg_distance) - 10000)
@@ -283,12 +295,14 @@ def print_final(row_position, q_table, num_episodes, worksheet, workbook, workbo
         worksheet.cell(row=row_position + 3, column=9, value=sum(d / 1000) / ref_value)
         count += 1000
         row_position += 1
-    """Print and Write Result of Benchmark"""
+
+    """Print and Write Result of Performance"""
     worksheet.cell(row=22, column=11, value=last_10k_avg_distances)
-    print('\n---> Result for 10k Avg= ', last_10k_avg_distances, "<----")
-    elapsed_time = timeit.default_timer() - start_time
-    worksheet.cell(row=4, column=11, value=elapsed_time)  # Write Computational Time
+    print('Result for 10k Avg= ', last_10k_avg_distances, '\n\n---> Open RL_Results for Detailed Results<----')
+    worksheet.cell(row=4, column=11, value=total_time)  # Write Computational Time
     worksheet.cell(row=25, column=11, value=vehicle.failure_result)
+    worksheet.cell(row=4, column=13, value=non_training_time)
+
     """Processing the 3d Numpy Array: Q_table for Excel"""
     worksheet.cell(row=5, column=16, value='Q-Table')  # Header for q_table
     names = ['x', 'y', 'z']
@@ -302,18 +316,28 @@ def print_final(row_position, q_table, num_episodes, worksheet, workbook, workbo
     with writer as writer:
         df.to_excel(writer, sheet_name=dataset_name, startrow=5, startcol=15)
 
+
 def main(instance):
-    data, demand_bottom, demand_top, capacity, q_table, apriori_list = LoadIn_Instance(instance)
-    learning_rate, exploration_decay_rate, num_episodes = scale_hyperparameters(instance, apriori_list)
-    workbook, worksheet, dataset_name, workbook_name = saving_process(instance, num_episodes, learning_rate, exploration_decay_rate)
-    vehicle = Service(0, 0, 0, capacity)
+    start_time = timeit.default_timer()  # Set start timer
+    data, demand_bottom, demand_top, capacity, q_table, apriori_list = LoadIn_Instance(instance)  # Import instance
+    learning_rate, exploration_decay_rate, num_episodes = scale_hyperparameters(instance, apriori_list)  # set scaling
+    workbook, worksheet, dataset_name, workbook_name = saving_process(instance, num_episodes, learning_rate,
+                                                                      exploration_decay_rate)  # detailed output
+    vehicle = Service(0, 0, 0, capacity)  # Init the vehicle
+    start_time_2 = timeit.default_timer()  # Measure start of learning
     for episode in range(num_episodes):
-        vehicle.reset_variables(capacity, instance, apriori_list)
-        for x in apriori_list:
-            vehicle.execute_episode(num_episodes, q_table, learning_rate, worksheet, data, capacity, apriori_list, episode, x)
+        vehicle.reset_variables(capacity, instance, apriori_list)  # Reset environment
+        if episode == num_episodes - 10000:  # Time learning ends
+            learning_time = timeit.default_timer() - start_time_2  # Isolate pure learning time
+        for x in apriori_list:  # Simulate the VRPSD
+            vehicle.execute_episode(num_episodes, q_table, learning_rate, worksheet, data, capacity, apriori_list,
+                                    episode, x)
         vehicle.post_episode_calculation(exploration_decay_rate, episode)
-    print_final(1, q_table, num_episodes, worksheet, workbook, workbook_name, dataset_name, vehicle)
+    print_final(1, q_table, num_episodes, worksheet, workbook, workbook_name, dataset_name, vehicle, start_time, learning_time)
+
 
 if __name__ == "__main__":
-    instance = Instance('C108', 100, 100, 10, 70)
-    main(instance)
+    # Instance(Name of Solomon Instance to Run, Customer Size up to 100, Capacity, Demand Low, Demand High)
+    instance = Instance('C106', 100, 70, 10, 50)  # Define desired Instance
+    main(instance)  # Run Instance
+    """Open RL_Result Excel File for Detailed Analysis"""
