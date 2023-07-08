@@ -217,6 +217,7 @@ def print_final(row_position, worksheet, workbook, workbook_name, vehicle):
         row_position += 1
     """Print and Write Result of Benchmark"""
     worksheet.cell(row=22, column=11, value=last_10k_avg_distances)
+    print('Result for 10k Avg= ', last_10k_avg_distances, '\n\n---> Open P_Results for Detailed Results<----')
     elapsed_time = timeit.default_timer() - start_time
     worksheet.cell(row=4, column=11, value=elapsed_time)  # Write Computational Time
     worksheet.cell(row=25, column=11, value=vehicle.failure_result)
@@ -236,9 +237,7 @@ def main(instance):
     return last_10k_avg_distances
 
 
-
-
 if __name__ == "__main__":
-    instance = Instance('C109', 90, 70, 10, 50)
+    instance = Instance('C101', 5, 15, 1, 10)
     last_10k_avg_distances = main(instance)
-    print(last_10k_avg_distances)
+    """Open RL_Result Excel File for Detailed Analysis"""
