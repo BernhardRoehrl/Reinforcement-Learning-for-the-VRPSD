@@ -1,25 +1,26 @@
 These are my project files for my Masterthesis.
-Archived refers to stuff I used as practice and to learn everything.
+
 Final Code Contains the actual Project.
 
 The Final clode is split between:
 
 -Simple Policy
-
+    -A detailed version for specifically examining a single or multiple instances. Saves to P_Results.
+    -A efficient version for fast Quick Results
 -Reinforcement Learning
+    -A detailed version for specifically examining a single or multiple instances. Saves to RL_Results
+    -A efficient version for fast Quick Results
+- Instance Prerequisites
+    Class Instance File. To Create a class u need the same of the Solomonfile, the customer-size, the capacity and the
+    demand range. These are mandatory and define an Instance. Refer to Solomon Instances Folder to see all available
+-Apriori
+    Basically handling the "routing". You can change the Google OR Tools FirstSolutionStrategy.PATH_CHEAPEST_ARC to 
+    whatever you prefer in Line 101. Sets Customer Order via a priori and creates the distance matrix
+-Mega Instance Generator:
+    Nested for loop and result generation with xlsx output via pandas and openpyxl. Currently, creates the 1920
+    instances. Saves to results.xlsx with advanced pre-processed columns for easier analysis.
+-XLSX
+    Results, P_Results and RL_Results are from output. ANOVA_Appendix is containing all the Analysis, Tables, Figures
+    featured in the Master-thesis.
 
-The input_string.txt has to contain any Solomon1987 Instance from the Capacitated Vehicle Routing Problem Libary.
-Prerequisites """Profile""" needs to be set up (demands, capacity, etc.) for the desired Instance manually because --> 
-Only the X and Y Coordinate are extracted from the input_string.txt and processed to cut_string.txt when the Policy of
-your choice (Reinforcement_Learning.py or Simple_Policy.py) is run. Apriori.py is just a modification from the Google OR
-VRP Tool and sets the customer order and the beginning of each policy. Results get captured in both .xlsx files. 
-Within the Reinforcement_Learning.py you can adjust some learning parameters. I did my best to find scalable hyperparameters
-that work on all kinds of SolomonInstances.
-
-TLDR:
-
--Put Solomon Instance into input_string.txt
-
--Set Up Instance Profile in Prerequisites
-
--Run Reinforcement_Learning.py or Simple_Policy.py
+Archived refers to stuff I used as practice and to learn Python+RL. Nothing in there is used in the final implementation
