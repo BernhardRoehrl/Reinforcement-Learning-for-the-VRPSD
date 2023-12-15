@@ -25,3 +25,7 @@ Nested for loop and result generation with xlsx output via pandas and openpyxl. 
 ### XLSX-Files
 
 Results, P_Results, and RL_Results are from output. ANOVA_Appendix is containing all the Analysis, Tables, Figures featured in the Master-thesis.
+
+### Archived
+
+Old Project Files & Tutorial and Learning Related Residuents 
