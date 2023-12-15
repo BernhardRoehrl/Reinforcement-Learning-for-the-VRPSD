@@ -9,8 +9,8 @@ import openpyxl
 from openpyxl.worksheet.table import Table, TableStyleInfo
 
 """Fixed"""
-data = []  # for our dataframe
-solomon_dir = r'D:\Code\VRP OR\Solomon Instances'  # location of Solomon Instances
+data = []  # for the dataframe
+solomon_dir = r'/Solomon Instances'  # location of Solomon Instances
 solomon_files = [f for f in os.listdir(solomon_dir) if os.path.isfile(os.path.join(solomon_dir, f))]
 # all solomon_files to be tested
 """Instance-Profiles"""
