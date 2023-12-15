@@ -1,8 +1,6 @@
 These are my project files for my Masterthesis.
 
-Final Code Contains the actual Project.
-
-The Final clode is split between:
+Split between
 
 -Simple Policy
     -A detailed version for specifically examining a single or multiple instances. Saves to P_Results.
@@ -23,4 +21,3 @@ The Final clode is split between:
     Results, P_Results and RL_Results are from output. ANOVA_Appendix is containing all the Analysis, Tables, Figures
     featured in the Master-thesis.
 
-Archived refers to stuff I used as practice and to learn Python+RL. Nothing in there is used in the final implementation
