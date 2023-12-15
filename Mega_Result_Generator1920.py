@@ -9,7 +9,7 @@ import openpyxl
 from openpyxl.worksheet.table import Table, TableStyleInfo
 
 """Fixed"""
-data = []  # for our dataframe
+data = []  # for the dataframe
 solomon_dir = r'D:\Code\VRP OR\Solomon Instances'  # location of Solomon Instances
 solomon_files = [f for f in os.listdir(solomon_dir) if os.path.isfile(os.path.join(solomon_dir, f))]
 # all solomon_files to be tested
@@ -35,9 +35,12 @@ for solomon_file in solomon_files:  # Go through all Instances
             demand_top = demand_configuration["demand_top"]
             demand_bottom = demand_configuration["demand_bottom"]
             capacity = demand_configuration["capacity"]
-            instance = Instance(file_name, size, capacity, demand_bottom, demand_top)  # Create the unique instance
-            result_SP, time_SP, failure_result_SP = Simple_Policy_Efficient.main(instance)  # Run instance in Simple Policy
-            result_RL, time_RL, failure_result_RL = Reinforcement_Learning_Efficient.main(instance)  # Run instance in RL
+            # Create the unique instance
+            instance = Instance(file_name, size, capacity, demand_bottom, demand_top)
+            # Run instance in Simple Policy
+            result_SP, time_SP, failure_result_SP = Simple_Policy_Efficient.main(instance)
+            # Run instance in RL
+            result_RL, time_RL, failure_result_RL = Reinforcement_Learning_Efficient.main(instance)
             result_DF = result_SP - result_RL  # Get diff in Performance
             time_DF = time_SP - time_RL  # Get diff in Time
             failure_result_DF = failure_result_RL - failure_result_SP
@@ -72,7 +75,7 @@ for solomon_file in solomon_files:  # Go through all Instances
             data.append(row)  # Append the dictionary to the data list
             pbar.update()  # Update Progress Bar
 
-"""Making Excel Look Good"""
+"""Processing Output"""
 # Write the DataFrame to Excel
 df = pd.DataFrame(data)
 df.to_excel("results.xlsx", index=False)
