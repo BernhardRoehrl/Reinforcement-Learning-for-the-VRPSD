@@ -1,14 +1,14 @@
 # Project Files for My Masterthesis
 
-### Simple Policy
+### Simple Policy  
 
-- A detailed version for specifically examining a single or multiple instances. Saves to P_Results.
-- A efficient version for fast Quick Results
+- A detailed version for specifically examining a single or multiple instances. Saves detailed Output to P_Results for analyzing specific instances.
+- An efficient version returning results for the Final Complete Instance Analysis.
 
 ### Reinforcement Learning
 
 - A detailed version for specifically examining a single or multiple instances. Saves to RL_Results
-- A efficient version for fast Quick Results
+- An efficient version returning results for the Final Complete Instance Analysis.
 
 ### Instance Prerequisites
 
